@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Random Assignment Simulation</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --slate: #2c3e50;
+  --navy: #1a2744;
+  --teal: #2a9d8f;
+  --teal-light: #40b4a6;
+  --amber: #e9a820;
+  --amber-light: #f0be50;
+  --red: #c0392b;
+  --red-light: #e74c3c;
+  --green: #27ae60;
+  --bg: #f5f6f8;
+  --card-bg: #ffffff;
+  --text: #2c3e50;
+  --text-light: #5a6c7d;
+  --border: #dce1e8;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+h1, h2, h3 { font-family: 'Source Serif 4', serif; }
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border);
+}
+
+header h1 {
+  font-size: 2rem;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+header p {
+  color: var(--text-light);
+  font-size: 0.95rem;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  padding: 1.25rem;
+  background: var(--card-bg);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.control-group label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.control-group input[type="range"] {
+  width: 120px;
+  accent-color: var(--teal);
+}
+
+.n-display {
+  font-weight: 600;
+  color: var(--navy);
+  min-width: 2rem;
+  text-align: center;
+}
+
+.mode-toggle {
+  display: flex;
+  background: var(--bg);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.mode-toggle button {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-light);
+  transition: all 0.2s;
+}
+
+.mode-toggle button.active {
+  background: var(--navy);
+  color: #fff;
+}
+
+.btn {
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-primary {
+  background: var(--teal);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--teal-light); }
+
+.btn-secondary {
+  background: var(--amber);
+  color: var(--navy);
+}
+.btn-secondary:hover { background: var(--amber-light); }
+
+.explainer {
+  background: var(--card-bg);
+  border-left: 3px solid var(--teal);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 0 8px 8px 0;
+  font-size: 0.88rem;
+  color: var(--text-light);
+}
+
+.results-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.results-header h2 {
+  font-size: 1.35rem;
+  color: var(--navy);
+}
+
+.comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.group-card {
+  background: var(--card-bg);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.group-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.group-card.treatment { border-top: 3px solid var(--teal); }
+.group-card.control { border-top: 3px solid var(--amber); }
+
+.group-card h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.group-card.treatment h3 { color: var(--teal); }
+.group-card.control h3 { color: var(--amber); }
+
+.group-n {
+  font-size: 0.82rem;
+  color: var(--text-light);
+  margin-bottom: 1rem;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--bg);
+  font-size: 0.9rem;
+}
+
+.stat-label { color: var(--text-light); }
+.stat-value { font-weight: 600; }
+
+.diff-section {
+  background: var(--card-bg);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.4s ease 0.15s, transform 0.4s ease 0.15s;
+}
+
+.diff-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.diff-section h3 {
+  font-size: 1rem;
+  color: var(--navy);
+  margin-bottom: 0.75rem;
+}
+
+.diff-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  font-size: 0.9rem;
+}
+
+.diff-value {
+  font-weight: 600;
+  padding: 0.15rem 0.6rem;
+  border-radius: 4px;
+  transition: background 0.3s, color 0.3s;
+}
+
+.diff-value.balanced {
+  background: #e8f5e9;
+  color: var(--green);
+}
+
+.diff-value.imbalanced {
+  background: #fdecea;
+  color: var(--red);
+}
+
+.dot-plot-section {
+  background: var(--card-bg);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.4s ease 0.25s, transform 0.4s ease 0.25s;
+}
+
+.dot-plot-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.dot-plot-section h3 {
+  font-size: 1rem;
+  color: var(--navy);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.chart-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.chart-container {
+  position: relative;
+}
+
+.chart-container h4 {
+  font-size: 0.85rem;
+  text-align: center;
+  color: var(--text-light);
+  margin-bottom: 0.5rem;
+  font-family: 'Inter', sans-serif;
+}
+
+canvas {
+  width: 100% !important;
+  height: 200px !important;
+}
+
+.dot-strip {
+  position: relative;
+  height: 80px;
+  margin: 0.5rem 0;
+}
+
+.dot-strip-axis {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-light);
+}
+
+.dot-strip-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 25px;
+  display: flex;
+  align-items: center;
+}
+
+.dot-strip-row.treatment-row { top: 5px; }
+.dot-strip-row.control-row { top: 32px; }
+
+.dot-strip-label {
+  position: absolute;
+  right: calc(100% + 6px);
+  font-size: 0.65rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text-light);
+}
+
+.strip-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease, left 0.4s ease;
+}
+
+.strip-dot.treatment-dot { background: var(--teal); }
+.strip-dot.control-dot { background: var(--amber); }
+
+.strip-dot.visible { opacity: 0.6; }
+
+.mean-line {
+  position: absolute;
+  width: 2px;
+  height: 25px;
+  top: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease 0.3s, left 0.4s ease;
+}
+
+.mean-line.visible { opacity: 1; }
+.mean-line.treatment-mean { background: var(--teal); }
+.mean-line.control-mean { background: var(--amber); }
+
+.strip-legend {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-light);
+}
+
+.strip-legend span::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.strip-legend .tl::before { background: var(--teal); }
+.strip-legend .cl::before { background: var(--amber); }
+
+.pedagogy-note {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-top: 1rem;
+  font-style: italic;
+}
+
+@media (max-width: 700px) {
+  .comparison { grid-template-columns: 1fr; }
+  .chart-row { grid-template-columns: 1fr; }
+  .controls { flex-direction: column; }
+  header h1 { font-size: 1.5rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>The Logic of Random Assignment</h1>
+    <p>This simulation illustrates why experiments randomly assign participants to treatment and control groups — and what goes wrong when they don't.</p>
+  </header>
+
+  <div class="controls">
+    <div class="control-group">
+      <label for="nSlider">Participants (N):</label>
+      <input type="range" id="nSlider" min="20" max="500" value="100" step="10">
+      <span class="n-display" id="nDisplay">100</span>
+    </div>
+    <div class="mode-toggle">
+      <button id="btnRandom" class="active" onclick="setMode('random')">Random Assignment</button>
+      <button id="btnBiased" onclick="setMode('biased')">Biased Sort</button>
+    </div>
+    <button class="btn btn-primary" onclick="rerun()">Rerun Assignment</button>
+    <button class="btn btn-secondary" onclick="newPopulation()">New Population</button>
+  </div>
+
+  <div class="explainer" id="explainerText">
+    <strong>Random assignment</strong> gives every participant an equal chance of landing in either group. This doesn't guarantee perfect balance, but it ensures that any differences between groups are due to chance alone — not to systematic bias.
+  </div>
+
+  <div id="resultsArea"></div>
+</div>
+
+<script>
+let population = [];
+let mode = 'random';
+let N = 100;
+
+const EDU_LEVELS = ['Less than HS', 'HS Diploma', 'Some College', "Bachelor's", 'Graduate Degree'];
+const EDU_WEIGHTS = [0.10, 0.27, 0.20, 0.26, 0.17];
+
+function randInt(a, b) {
+  return a + Math.floor(Math.random() * (b - a + 1));
+}
+
+function sampleAge() {
+  // Slightly bell-shaped between 18-80
+  const u1 = Math.random(), u2 = Math.random();
+  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  const age = Math.round(49 + z * 15);
+  return Math.max(18, Math.min(80, age));
+}
+
+function sampleEducation() {
+  const r = Math.random();
+  let cum = 0;
+  for (let i = 0; i < EDU_WEIGHTS.length; i++) {
+    cum += EDU_WEIGHTS[i];
+    if (r <= cum) return i;
+  }
+  return EDU_WEIGHTS.length - 1;
+}
+
+function sampleIdeology() {
+  // Clustered around 4 with tails
+  const u1 = Math.random(), u2 = Math.random();
+  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  const val = Math.round(4 + z * 1.4);
+  return Math.max(1, Math.min(7, val));
+}
+
+function generatePopulation(n) {
+  population = [];
+  for (let i = 0; i < n; i++) {
+    population.push({
+      age: sampleAge(),
+      education: sampleEducation(),
+      ideology: sampleIdeology(),
+      group: null
+    });
+  }
+}
+
+function assignGroups() {
+  if (mode === 'random') {
+    population.forEach(p => {
+      p.group = Math.random() < 0.5 ? 'treatment' : 'control';
+    });
+  } else {
+    // Biased: older, more conservative → more likely treatment
+    population.forEach(p => {
+      const ageWeight = (p.age - 18) / 62;       // 0 to 1
+      const ideoWeight = (p.ideology - 1) / 6;   // 0 to 1
+      const prob = 0.15 + 0.7 * (0.5 * ageWeight + 0.5 * ideoWeight);
+      p.group = Math.random() < prob ? 'treatment' : 'control';
+    });
+  }
+}
+
+function mean(arr) {
+  if (!arr.length) return 0;
+  return arr.reduce((a, b) => a + b, 0) / arr.length;
+}
+
+function computeStats(group) {
+  const members = population.filter(p => p.group === group);
+  const ages = members.map(p => p.age);
+  const ideologies = members.map(p => p.ideology);
+  const eduCounts = [0, 0, 0, 0, 0];
+  members.forEach(p => eduCounts[p.education]++);
+  const eduPcts = eduCounts.map(c => members.length ? (c / members.length * 100) : 0);
+  const pctBachPlus = members.length
+    ? (members.filter(p => p.education >= 3).length / members.length * 100)
+    : 0;
+
+  return {
+    n: members.length,
+    meanAge: mean(ages),
+    meanIdeology: mean(ideologies),
+    eduPcts,
+    pctBachPlus,
+    ages,
+    ideologies
+  };
+}
+
+function diffClass(diff, thresholds) {
+  return Math.abs(diff) > thresholds ? 'imbalanced' : 'balanced';
+}
+
+function render() {
+  const t = computeStats('treatment');
+  const c = computeStats('control');
+
+  const ageDiff = t.meanAge - c.meanAge;
+  const ideoDiff = t.meanIdeology - c.meanIdeology;
+  const bachDiff = t.pctBachPlus - c.pctBachPlus;
+
+  const area = document.getElementById('resultsArea');
+  area.innerHTML = `
+    <div class="results-header">
+      <h2>${mode === 'random' ? 'Random Assignment Results' : 'Biased Sort Results'}</h2>
+    </div>
+
+    <div class="comparison">
+      <div class="group-card treatment" id="treatCard">
+        <h3>Treatment Group</h3>
+        <div class="group-n">n = ${t.n}</div>
+        <div class="stat-row"><span class="stat-label">Mean Age</span><span class="stat-value">${t.meanAge.toFixed(1)}</span></div>
+        <div class="stat-row"><span class="stat-label">Mean Ideology</span><span class="stat-value">${t.meanIdeology.toFixed(2)}</span></div>
+        <div class="stat-row"><span class="stat-label">% Bachelor's+</span><span class="stat-value">${t.pctBachPlus.toFixed(1)}%</span></div>
+        <div style="margin-top:0.75rem; font-size:0.8rem; color:var(--text-light);">
+          ${EDU_LEVELS.map((l, i) => `${l}: ${t.eduPcts[i].toFixed(0)}%`).join(' · ')}
+        </div>
+      </div>
+      <div class="group-card control" id="ctrlCard">
+        <h3>Control Group</h3>
+        <div class="group-n">n = ${c.n}</div>
+        <div class="stat-row"><span class="stat-label">Mean Age</span><span class="stat-value">${c.meanAge.toFixed(1)}</span></div>
+        <div class="stat-row"><span class="stat-label">Mean Ideology</span><span class="stat-value">${c.meanIdeology.toFixed(2)}</span></div>
+        <div class="stat-row"><span class="stat-label">% Bachelor's+</span><span class="stat-value">${c.pctBachPlus.toFixed(1)}%</span></div>
+        <div style="margin-top:0.75rem; font-size:0.8rem; color:var(--text-light);">
+          ${EDU_LEVELS.map((l, i) => `${l}: ${c.eduPcts[i].toFixed(0)}%`).join(' · ')}
+        </div>
+      </div>
+    </div>
+
+    <div class="diff-section" id="diffSection">
+      <h3>Group Differences (Treatment − Control)</h3>
+      <div class="diff-row">
+        <span class="stat-label">Age Difference</span>
+        <span class="diff-value ${diffClass(ageDiff, 3)}">${ageDiff > 0 ? '+' : ''}${ageDiff.toFixed(1)} years</span>
+      </div>
+      <div class="diff-row">
+        <span class="stat-label">Ideology Difference</span>
+        <span class="diff-value ${diffClass(ideoDiff, 0.3)}">${ideoDiff > 0 ? '+' : ''}${ideoDiff.toFixed(2)} pts</span>
+      </div>
+      <div class="diff-row">
+        <span class="stat-label">Bachelor's+ Difference</span>
+        <span class="diff-value ${diffClass(bachDiff, 5)}">${bachDiff > 0 ? '+' : ''}${bachDiff.toFixed(1)} pp</span>
+      </div>
+    </div>
+
+    <div class="dot-plot-section" id="dotPlot">
+      <h3>Distribution Comparison</h3>
+      <div class="chart-row">
+        <div class="chart-container">
+          <h4>Age</h4>
+          <div class="dot-strip" id="ageStrip" style="margin-left: 50px;"></div>
+          <div style="margin-left:50px; display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-light);">
+            <span>18</span><span>30</span><span>49</span><span>65</span><span>80</span>
+          </div>
+        </div>
+        <div class="chart-container">
+          <h4>Political Ideology</h4>
+          <div class="dot-strip" id="ideoStrip" style="margin-left: 50px;"></div>
+          <div style="margin-left:50px; display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-light);">
+            <span>1 (V.Lib)</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7 (V.Con)</span>
+          </div>
+        </div>
+      </div>
+      <div class="strip-legend">
+        <span class="tl">Treatment</span>
+        <span class="cl">Control</span>
+        <span style="font-style:italic;">| = group mean</span>
+      </div>
+    </div>
+
+    <p class="pedagogy-note" id="pedNote"></p>
+  `;
+
+  // Build dot strips
+  buildStrip('ageStrip', t.ages, c.ages, 18, 80, t.meanAge, c.meanAge);
+  buildStrip('ideoStrip', t.ideologies, c.ideologies, 1, 7, t.meanIdeology, c.meanIdeology);
+
+  // Animate in
+  requestAnimationFrame(() => {
+    document.getElementById('treatCard').classList.add('visible');
+    setTimeout(() => document.getElementById('ctrlCard').classList.add('visible'), 80);
+    setTimeout(() => document.getElementById('diffSection').classList.add('visible'), 160);
+    setTimeout(() => document.getElementById('dotPlot').classList.add('visible'), 240);
+
+    // Animate dots
+    setTimeout(() => {
+      document.querySelectorAll('.strip-dot, .mean-line').forEach((el, i) => {
+        setTimeout(() => el.classList.add('visible'), i * 4);
+      });
+    }, 300);
+  });
+
+  // Pedagogy note
+  const pedNote = document.getElementById('pedNote');
+  if (mode === 'random') {
+    pedNote.textContent = 'Notice that the group differences are small and vary each time you rerun. Random assignment doesn\'t produce identical groups — it produces groups with no systematic differences.';
+  } else {
+    pedNote.textContent = 'The biased sort pushes older and more conservative participants into treatment. This confounds any treatment effect — you can\'t tell if an outcome difference is caused by the treatment or by the pre-existing group imbalance.';
+  }
+}
+
+function buildStrip(containerId, treatmentVals, controlVals, min, max, tMean, cMean) {
+  const container = document.getElementById(containerId);
+  const range = max - min;
+
+  let html = '<div class="dot-strip-row treatment-row"><span class="dot-strip-label">T</span>';
+  treatmentVals.forEach(v => {
+    const pct = ((v - min) / range * 100).toFixed(1);
+    html += `<span class="strip-dot treatment-dot" style="left:${pct}%"></span>`;
+  });
+  const tMeanPct = ((tMean - min) / range * 100).toFixed(1);
+  html += `<span class="mean-line treatment-mean" style="left:${tMeanPct}%"></span>`;
+  html += '</div>';
+
+  html += '<div class="dot-strip-row control-row"><span class="dot-strip-label">C</span>';
+  controlVals.forEach(v => {
+    const pct = ((v - min) / range * 100).toFixed(1);
+    html += `<span class="strip-dot control-dot" style="left:${pct}%"></span>`;
+  });
+  const cMeanPct = ((cMean - min) / range * 100).toFixed(1);
+  html += `<span class="mean-line control-mean" style="left:${cMeanPct}%"></span>`;
+  html += '</div>';
+
+  container.innerHTML = html;
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('btnRandom').classList.toggle('active', m === 'random');
+  document.getElementById('btnBiased').classList.toggle('active', m === 'biased');
+
+  const explainer = document.getElementById('explainerText');
+  if (m === 'random') {
+    explainer.innerHTML = '<strong>Random assignment</strong> gives every participant an equal chance of landing in either group. This doesn\'t guarantee perfect balance, but it ensures that any differences between groups are due to chance alone — not to systematic bias.';
+  } else {
+    explainer.innerHTML = '<strong>Biased sort</strong> assigns participants based on their characteristics — here, older and more conservative participants are more likely to end up in the treatment group. This is what happens in observational studies without randomization.';
+  }
+
+  assignGroups();
+  render();
+}
+
+function rerun() {
+  assignGroups();
+  render();
+}
+
+function newPopulation() {
+  N = parseInt(document.getElementById('nSlider').value);
+  generatePopulation(N);
+  assignGroups();
+  render();
+}
+
+document.getElementById('nSlider').addEventListener('input', function() {
+  document.getElementById('nDisplay').textContent = this.value;
+});
+
+document.getElementById('nSlider').addEventListener('change', function() {
+  N = parseInt(this.value);
+  generatePopulation(N);
+  assignGroups();
+  render();
+});
+
+// Init
+generatePopulation(N);
+assignGroups();
+render();
+</script>
+</body>
+</html>
