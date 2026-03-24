@@ -763,14 +763,15 @@ function render() {
     </div>
   `;
 
-  // People grid — show all population members
+  // People grid — show first 1000 of population
+  const gridSize = 1000;
   const sampleSet = new Set(sampleIndices);
   html += `
     <div class="people-grid-section" id="peopleGrid">
       <h3>Population & Sample</h3>
-      <div class="subtitle">Each square is one person (${POP_SIZE.toLocaleString()} total). ${sampleIndices.length ? `Highlighted = sampled (${sampleIndices.length}).` : 'Click "Draw Sample" to begin.'}</div>
+      <div class="subtitle">Each square is one person (showing ${gridSize.toLocaleString()} of ${POP_SIZE.toLocaleString()}). ${sampleIndices.length ? `Highlighted = sampled.` : 'Click "Draw Sample" to begin.'}</div>
       <div class="people-grid">
-        ${population.map((p, i) => {
+        ${population.slice(0, gridSize).map((p, i) => {
           const sampled = sampleSet.has(i);
           const cls = (p.support ? 'support' : 'oppose') +
             (sampleIndices.length ? (sampled ? ' sampled' : ' not-sampled') : '');
