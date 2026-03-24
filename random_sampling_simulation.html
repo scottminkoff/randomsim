@@ -38,7 +38,7 @@ body {
 h1, h2, h3 { font-family: 'Source Serif 4', serif; }
 
 .container {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
 }
@@ -332,6 +332,37 @@ header p {
   color: var(--navy);
 }
 
+.histograms-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.histograms-row .sampling-dist {
+  margin-bottom: 0;
+}
+
+.histograms-row .histogram {
+  height: 140px;
+  margin: 0 20px 1rem;
+}
+
+.histograms-row .hist-axis {
+  margin: 0.25rem 20px 0;
+}
+
+.histograms-row .dist-stats {
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+@media (max-width: 900px) {
+  .histograms-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .pedagogy-note {
   text-align: center;
   font-size: 0.85rem;
@@ -378,8 +409,8 @@ header p {
 }
 
 .person-dot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 1px;
   transition: opacity 0.2s ease;
 }
@@ -631,9 +662,11 @@ function render() {
 
   // Sampling distribution histogram (if we have results)
   if (samplingResults.length > 1) {
-    html += buildHistogram('support', 'Policy Support Estimate', '%', trueSupport, r => r.support);
-    html += buildHistogram('age', 'Mean Age Estimate', ' yrs', trueMeanAge, r => r.meanAge);
-    html += buildHistogram('income', 'Mean Income Estimate', 'k', trueMeanIncome, r => r.meanIncome);
+    html += `<div class="histograms-row">`;
+    html += buildHistogram('support', 'Policy Support', '%', trueSupport, r => r.support);
+    html += buildHistogram('age', 'Mean Age', ' yrs', trueMeanAge, r => r.meanAge);
+    html += buildHistogram('income', 'Mean Income', 'k', trueMeanIncome, r => r.meanIncome);
+    html += `</div>`;
   }
 
   // Pedagogy note
