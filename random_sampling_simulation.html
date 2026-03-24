@@ -467,7 +467,6 @@ header p {
     </div>
     <button class="btn btn-primary" onclick="drawSample()">Draw Sample</button>
     <button class="btn btn-accent" onclick="runMany()">Draw 100 Samples</button>
-    <button class="btn btn-secondary" onclick="resetSamples()">Reset</button>
     <button class="btn btn-secondary" onclick="newPopulation()">New Population</button>
   </div>
 
@@ -551,11 +550,7 @@ function errorClass(error, thresholds) {
 
 function drawSample() {
   sampleN = parseInt(document.getElementById('sampleSlider').value);
-  const newIndices = drawRandomSample(sampleN);
-  // Cumulative: merge new sample into existing
-  const combined = new Set(sampleIndices);
-  newIndices.forEach(i => combined.add(i));
-  sampleIndices = [...combined];
+  sampleIndices = drawRandomSample(sampleN);
   const stats = computeSampleStats(sampleIndices);
   samplingResults.push(stats);
   render();
@@ -568,17 +563,10 @@ function runMany() {
     const stats = computeSampleStats(indices);
     samplingResults.push(stats);
   }
-  // Last draw also cumulative
-  const newIndices = drawRandomSample(sampleN);
-  const combined = new Set(sampleIndices);
-  newIndices.forEach(i => combined.add(i));
-  sampleIndices = [...combined];
-  render();
-}
-
-function resetSamples() {
-  sampleIndices = [];
-  samplingResults = [];
+  // Show the last drawn sample on the grid
+  sampleIndices = drawRandomSample(sampleN);
+  const stats = computeSampleStats(sampleIndices);
+  samplingResults.push(stats);
   render();
 }
 
@@ -643,7 +631,7 @@ function render() {
   if (stats) {
     html += `
       <div class="sample-result random-sample" id="sampleResult">
-        <h3>Cumulative Sample (n = ${sampleIndices.length})</h3>
+        <h3>Random Sample (n = ${stats.n})</h3>
         <div class="est-row">
           <span class="est-label">Policy Support</span>
           <span class="est-value">
@@ -678,9 +666,9 @@ function render() {
   // Sampling distribution histogram (if we have results)
   if (samplingResults.length > 1) {
     html += `<div class="histograms-row">`;
-    html += buildHistogram('support', 'Policy Support', '%', trueSupport, r => r.support);
-    html += buildHistogram('age', 'Mean Age', ' yrs', trueMeanAge, r => r.meanAge);
-    html += buildHistogram('income', 'Mean Income', 'k', trueMeanIncome, r => r.meanIncome);
+    html += buildHistogram('support', 'Policy Support', '%', trueSupport, r => r.support, 'var(--teal)');
+    html += buildHistogram('age', 'Mean Age', ' yrs', trueMeanAge, r => r.meanAge, 'var(--purple)');
+    html += buildHistogram('income', 'Mean Income', 'k', trueMeanIncome, r => r.meanIncome, 'var(--amber)');
     html += `</div>`;
   }
 
@@ -698,7 +686,7 @@ function render() {
   });
 }
 
-function buildHistogram(key, title, unit, trueVal, accessor) {
+function buildHistogram(key, title, unit, trueVal, accessor, color) {
   const values = samplingResults.map(accessor);
   if (values.length === 0) return '';
 
@@ -723,7 +711,7 @@ function buildHistogram(key, title, unit, trueVal, accessor) {
   bins.forEach((count, i) => {
     const h = (count / maxCount * 100).toFixed(1);
     const left = (i / nBins * 100).toFixed(2);
-    barsHtml += `<div class="hist-bar" style="left:${left}%; width:${barWidthPct}%; height:${h}%"></div>`;
+    barsHtml += `<div class="hist-bar" style="left:${left}%; width:${barWidthPct}%; height:${h}%; background:${color}"></div>`;
   });
 
   const mean = values.reduce((a, b) => a + b, 0) / values.length;
@@ -736,8 +724,8 @@ function buildHistogram(key, title, unit, trueVal, accessor) {
 
   let statsHtml = `<div class="dist-stats">`;
   statsHtml += `<div class="stat-item"><div class="stat-label">True Value</div><div class="stat-val">${fmt(trueVal)}</div></div>`;
-  statsHtml += `<div class="stat-item"><div class="stat-label">Sample Mean</div><div class="stat-val" style="color:var(--teal)">${fmt(mean)}</div></div>`;
-  if (sd !== null) statsHtml += `<div class="stat-item"><div class="stat-label">Sample SD</div><div class="stat-val" style="color:var(--teal)">${sd.toFixed(2)}</div></div>`;
+  statsHtml += `<div class="stat-item"><div class="stat-label">Sample Mean</div><div class="stat-val" style="color:${color}">${fmt(mean)}</div></div>`;
+  if (sd !== null) statsHtml += `<div class="stat-item"><div class="stat-label">Sample SD</div><div class="stat-val" style="color:${color}">${sd.toFixed(2)}</div></div>`;
   statsHtml += `<div class="stat-item"><div class="stat-label">Samples</div><div class="stat-val">${values.length}</div></div>`;
   statsHtml += `</div>`;
 
@@ -768,7 +756,7 @@ function getPedNote() {
     return 'Click "Draw Sample" to select people from the population and see how well the sample reflects reality.';
   }
   if (samplingResults.length < 5) {
-    return 'Try clicking "Draw Sample" several times, or "Draw 100 Samples" — notice how random samples scatter around the true value without systematic bias.';
+    return 'Try clicking "Draw Sample" several times — notice how random samples scatter around the true value without systematic bias. Try "Draw 100 Samples" to build up the distribution.';
   }
   return 'Random samples are unbiased: they don\'t systematically over- or underestimate the truth. Individual samples may be off, but on average they\'re right. That\'s the magic of random sampling.';
 }
@@ -782,6 +770,10 @@ function newPopulation() {
 
 document.getElementById('sampleSlider').addEventListener('input', function() {
   document.getElementById('nDisplay').textContent = this.value;
+  // Clear history when sample size changes to avoid mixing sizes
+  samplingResults = [];
+  sampleIndices = [];
+  render();
 });
 
 // Init
