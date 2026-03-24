@@ -675,15 +675,15 @@ function buildDistChart(key, title, popVals, sampleVals, color, isBinary) {
       <div style="display:flex; gap:1.5rem; justify-content:center; align-items:flex-end; height:140px; padding:0 1rem;">
         <div style="text-align:center; flex:1;">
           <div style="display:flex; gap:4px; justify-content:center; align-items:flex-end; height:120px;">
-            <div style="width:36px; background:var(--navy); opacity:0.25; border-radius:3px 3px 0 0; height:${popPct * 1.1}px;" title="Population: ${popPct.toFixed(1)}%"></div>
+            <div style="width:36px; background:${color}; opacity:0.25; border-radius:3px 3px 0 0; height:${popPct * 1.1}px;" title="Population: ${popPct.toFixed(1)}%"></div>
             ${hasSample ? `<div style="width:36px; background:${color}; border-radius:3px 3px 0 0; height:${samPct * 1.1}px;" title="Sample: ${samPct.toFixed(1)}%"></div>` : ''}
           </div>
           <div style="font-size:0.75rem; color:var(--text-light); margin-top:4px;">Support</div>
         </div>
         <div style="text-align:center; flex:1;">
           <div style="display:flex; gap:4px; justify-content:center; align-items:flex-end; height:120px;">
-            <div style="width:36px; background:var(--navy); opacity:0.25; border-radius:3px 3px 0 0; height:${(100 - popPct) * 1.1}px;" title="Population: ${(100 - popPct).toFixed(1)}%"></div>
-            ${hasSample ? `<div style="width:36px; background:${color}; opacity:0.6; border-radius:3px 3px 0 0; height:${(100 - samPct) * 1.1}px;" title="Sample: ${(100 - samPct).toFixed(1)}%"></div>` : ''}
+            <div style="width:36px; background:${color}; opacity:0.25; border-radius:3px 3px 0 0; height:${(100 - popPct) * 1.1}px;" title="Population: ${(100 - popPct).toFixed(1)}%"></div>
+            ${hasSample ? `<div style="width:36px; background:${color}; border-radius:3px 3px 0 0; height:${(100 - samPct) * 1.1}px;" title="Sample: ${(100 - samPct).toFixed(1)}%"></div>` : ''}
           </div>
           <div style="font-size:0.75rem; color:var(--text-light); margin-top:4px;">Oppose</div>
         </div>
@@ -697,10 +697,16 @@ function buildDistChart(key, title, popVals, sampleVals, color, isBinary) {
     }
     statsHtml += `</div>`;
 
+    let legendHtml = `<div class="conv-legend" style="margin-top:0.5rem;">
+      <span><span class="swatch" style="background:${color}; opacity:0.25; width:10px; height:10px; border-radius:2px; display:inline-block;"></span> Population</span>
+      ${hasSample ? `<span><span class="swatch" style="background:${color}; width:10px; height:10px; border-radius:2px; display:inline-block;"></span> Sample</span>` : ''}
+    </div>`;
+
     return `
       <div class="sampling-dist" id="samplingDist_${key}">
         <h3>${title}</h3>
         ${barsHtml}
+        ${legendHtml}
         ${statsHtml}
       </div>`;
   }
