@@ -668,31 +668,16 @@ function drawRandomSample(n) {
 
 function drawBiasedSample(n) {
   // Convenience sample: oversample younger, higher-income (like an online poll)
-  // Weight each person by bias factors
   const weights = population.map(p => {
     const ageBias = Math.max(0.1, 1.5 - (p.age - 18) / 67);    // young overrepresented
     const incomeBias = Math.max(0.2, 0.5 + (p.income - 15) / 185); // rich overrepresented
     return ageBias * incomeBias;
   });
-  const totalWeight = weights.reduce((a, b) => a + b, 0);
-  const probs = weights.map(w => w / totalWeight);
 
-  // Weighted sampling without replacement
-  const selected = new Set();
-  let attempts = 0;
-  while (selected.size < n && attempts < n * 50) {
-    let r = Math.random();
-    let cum = 0;
-    for (let i = 0; i < POP_SIZE; i++) {
-      cum += probs[i];
-      if (r <= cum) {
-        selected.add(i);
-        break;
-      }
-    }
-    attempts++;
-  }
-  return Array.from(selected);
+  // Sort by weight descending, pick top n with some randomization
+  const indexed = weights.map((w, i) => ({ w: w * (0.5 + Math.random()), i }));
+  indexed.sort((a, b) => b.w - a.w);
+  return indexed.slice(0, n).map(x => x.i);
 }
 
 function computeSampleStats(indices) {
@@ -855,6 +840,12 @@ function render() {
       .forEach((el, i) => {
         setTimeout(() => el.classList.add('visible'), i * 80);
       });
+    // Animate convergence dots
+    setTimeout(() => {
+      document.querySelectorAll('.conv-dot').forEach((el, i) => {
+        setTimeout(() => el.classList.add('visible'), i * 5);
+      });
+    }, 400);
   });
 }
 
