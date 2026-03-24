@@ -466,7 +466,6 @@ header p {
       <span class="n-display" id="nDisplay">50</span>
     </div>
     <button class="btn btn-primary" onclick="drawSample()">Draw Sample</button>
-    <button class="btn btn-accent" onclick="runMany()">Draw 100 Samples</button>
     <button class="btn btn-secondary" onclick="newPopulation()">New Population</button>
   </div>
 
@@ -481,7 +480,6 @@ header p {
 const POP_SIZE = 10000;
 let population = [];
 let sampleIndices = [];
-let samplingResults = [];
 let sampleN = 50;
 
 // Population parameters (set when generating)
@@ -518,7 +516,6 @@ function generatePopulation() {
   trueMeanAge = population.reduce((s, p) => s + p.age, 0) / POP_SIZE;
   trueMeanIncome = population.reduce((s, p) => s + p.income, 0) / POP_SIZE;
 
-  samplingResults = [];
   sampleIndices = [];
 }
 
@@ -551,22 +548,6 @@ function errorClass(error, thresholds) {
 function drawSample() {
   sampleN = parseInt(document.getElementById('sampleSlider').value);
   sampleIndices = drawRandomSample(sampleN);
-  const stats = computeSampleStats(sampleIndices);
-  samplingResults.push(stats);
-  render();
-}
-
-function runMany() {
-  sampleN = parseInt(document.getElementById('sampleSlider').value);
-  for (let i = 0; i < 100; i++) {
-    const indices = drawRandomSample(sampleN);
-    const stats = computeSampleStats(indices);
-    samplingResults.push(stats);
-  }
-  // Show the last drawn sample on the grid
-  sampleIndices = drawRandomSample(sampleN);
-  const stats = computeSampleStats(sampleIndices);
-  samplingResults.push(stats);
   render();
 }
 
@@ -596,10 +577,6 @@ function render() {
         <div class="pop-stat">
           <div class="label">Mean Income</div>
           <div class="value">$${trueMeanIncome.toFixed(0)}k</div>
-        </div>
-        <div class="pop-stat">
-          <div class="label">Samples Drawn</div>
-          <div class="value">${samplingResults.length}</div>
         </div>
       </div>
     </div>
@@ -663,14 +640,13 @@ function render() {
     `;
   }
 
-  // Sampling distribution histogram (if we have results)
-  if (samplingResults.length > 1) {
-    html += `<div class="histograms-row">`;
-    html += buildHistogram('support', 'Policy Support', '%', trueSupport, r => r.support, 'var(--teal)');
-    html += buildHistogram('age', 'Mean Age', ' yrs', trueMeanAge, r => r.meanAge, 'var(--purple)');
-    html += buildHistogram('income', 'Mean Income', 'k', trueMeanIncome, r => r.meanIncome, 'var(--amber)');
-    html += `</div>`;
-  }
+  // Distribution comparison charts
+  const sampleMembers = sampleIndices.map(i => population[i]);
+  html += `<div class="histograms-row">`;
+  html += buildDistChart('support', 'Policy Support', population.map(p => p.support ? 1 : 0), sampleMembers.map(p => p.support ? 1 : 0), 'var(--teal)', true);
+  html += buildDistChart('age', 'Age Distribution', population.map(p => p.age), sampleMembers.map(p => p.age), 'var(--purple)', false);
+  html += buildDistChart('income', 'Income Distribution ($k)', population.map(p => p.income), sampleMembers.map(p => p.income), 'var(--amber)', false);
+  html += `</div>`;
 
   // Pedagogy note
   html += `<p class="pedagogy-note" id="pedNote">${getPedNote()}</p>`;
@@ -686,59 +662,118 @@ function render() {
   });
 }
 
-function buildHistogram(key, title, unit, trueVal, accessor, color) {
-  const values = samplingResults.map(accessor);
-  if (values.length === 0) return '';
+function buildDistChart(key, title, popVals, sampleVals, color, isBinary) {
+  const hasSample = sampleVals.length > 0;
 
-  const allVals = [...values, trueVal];
-  const minVal = Math.floor(Math.min(...allVals) - 2);
-  const maxVal = Math.ceil(Math.max(...allVals) + 2);
-  const range = maxVal - minVal;
-  const nBins = Math.min(30, Math.max(10, Math.ceil(range / 2)));
+  if (isBinary) {
+    // Bar chart: support vs oppose, population vs sample
+    const popPct = (popVals.filter(v => v === 1).length / popVals.length * 100);
+    const samPct = hasSample ? (sampleVals.filter(v => v === 1).length / sampleVals.length * 100) : null;
+    const error = samPct !== null ? samPct - popPct : null;
+
+    let barsHtml = `
+      <div style="display:flex; gap:1.5rem; justify-content:center; align-items:flex-end; height:140px; padding:0 1rem;">
+        <div style="text-align:center; flex:1;">
+          <div style="display:flex; gap:4px; justify-content:center; align-items:flex-end; height:120px;">
+            <div style="width:36px; background:var(--navy); opacity:0.25; border-radius:3px 3px 0 0; height:${popPct * 1.1}px;" title="Population: ${popPct.toFixed(1)}%"></div>
+            ${hasSample ? `<div style="width:36px; background:${color}; border-radius:3px 3px 0 0; height:${samPct * 1.1}px;" title="Sample: ${samPct.toFixed(1)}%"></div>` : ''}
+          </div>
+          <div style="font-size:0.75rem; color:var(--text-light); margin-top:4px;">Support</div>
+        </div>
+        <div style="text-align:center; flex:1;">
+          <div style="display:flex; gap:4px; justify-content:center; align-items:flex-end; height:120px;">
+            <div style="width:36px; background:var(--navy); opacity:0.25; border-radius:3px 3px 0 0; height:${(100 - popPct) * 1.1}px;" title="Population: ${(100 - popPct).toFixed(1)}%"></div>
+            ${hasSample ? `<div style="width:36px; background:${color}; opacity:0.6; border-radius:3px 3px 0 0; height:${(100 - samPct) * 1.1}px;" title="Sample: ${(100 - samPct).toFixed(1)}%"></div>` : ''}
+          </div>
+          <div style="font-size:0.75rem; color:var(--text-light); margin-top:4px;">Oppose</div>
+        </div>
+      </div>`;
+
+    let statsHtml = `<div class="dist-stats">`;
+    statsHtml += `<div class="stat-item"><div class="stat-label">Population</div><div class="stat-val">${popPct.toFixed(1)}%</div></div>`;
+    if (hasSample) {
+      statsHtml += `<div class="stat-item"><div class="stat-label">Sample</div><div class="stat-val" style="color:${color}">${samPct.toFixed(1)}%</div></div>`;
+      statsHtml += `<div class="stat-item"><div class="stat-label">Error</div><div class="stat-val"><span class="est-error ${errorClass(error, [3, 8])}">${error > 0 ? '+' : ''}${error.toFixed(1)} pp</span></div></div>`;
+    }
+    statsHtml += `</div>`;
+
+    return `
+      <div class="sampling-dist" id="samplingDist_${key}">
+        <h3>${title}</h3>
+        ${barsHtml}
+        ${statsHtml}
+      </div>`;
+  }
+
+  // Continuous: overlaid histograms
+  const allVals = popVals;
+  const minVal = Math.floor(Math.min(...allVals));
+  const maxVal = Math.ceil(Math.max(...allVals));
+  const range = maxVal - minVal || 1;
+  const nBins = 20;
   const binWidth = range / nBins;
 
-  const bins = new Array(nBins).fill(0);
-  values.forEach(v => {
-    const b = Math.min(nBins - 1, Math.max(0, Math.floor((v - minVal) / binWidth)));
-    bins[b]++;
-  });
-  const maxCount = Math.max(...bins, 1);
+  function binData(vals) {
+    const bins = new Array(nBins).fill(0);
+    vals.forEach(v => {
+      const b = Math.min(nBins - 1, Math.max(0, Math.floor((v - minVal) / binWidth)));
+      bins[b]++;
+    });
+    // Normalize to proportions
+    const total = vals.length || 1;
+    return bins.map(c => c / total);
+  }
+
+  const popBins = binData(popVals);
+  const sampleBins = hasSample ? binData(sampleVals) : null;
+  const maxProp = Math.max(...popBins, ...(sampleBins || [0]));
 
   const barWidthPct = (100 / nBins).toFixed(2);
-  const truePct = ((trueVal - minVal) / range * 100).toFixed(1);
 
   let barsHtml = '';
-  bins.forEach((count, i) => {
-    const h = (count / maxCount * 100).toFixed(1);
+  // Population bars (faded)
+  popBins.forEach((prop, i) => {
+    const h = (prop / maxProp * 100).toFixed(1);
     const left = (i / nBins * 100).toFixed(2);
-    barsHtml += `<div class="hist-bar" style="left:${left}%; width:${barWidthPct}%; height:${h}%; background:${color}"></div>`;
+    barsHtml += `<div class="hist-bar" style="left:${left}%; width:${barWidthPct}%; height:${h}%; background:var(--navy); opacity:0.18;"></div>`;
   });
+  // Sample bars (colored, semi-transparent overlay)
+  if (sampleBins) {
+    sampleBins.forEach((prop, i) => {
+      const h = (prop / maxProp * 100).toFixed(1);
+      const left = (i / nBins * 100).toFixed(2);
+      barsHtml += `<div class="hist-bar" style="left:${left}%; width:${barWidthPct}%; height:${h}%; background:${color}; opacity:0.7;"></div>`;
+    });
+  }
 
-  const mean = values.reduce((a, b) => a + b, 0) / values.length;
-  const sd = values.length > 1
-    ? Math.sqrt(values.reduce((s, v) => s + (v - mean) ** 2, 0) / (values.length - 1))
-    : null;
-
-  const fmt = v => key === 'income' ? `$${v.toFixed(0)}${unit}` : `${v.toFixed(1)}${unit}`;
-  const fmtAxis = v => key === 'income' ? `$${v.toFixed(0)}k` : key === 'support' ? `${v.toFixed(0)}%` : `${v.toFixed(0)}`;
+  const popMean = popVals.reduce((a, b) => a + b, 0) / popVals.length;
+  const samMean = hasSample ? sampleVals.reduce((a, b) => a + b, 0) / sampleVals.length : null;
+  const error = samMean !== null ? samMean - popMean : null;
+  const isIncome = key === 'income';
+  const fmt = v => isIncome ? `$${v.toFixed(0)}k` : v.toFixed(1);
+  const fmtAxis = v => isIncome ? `$${v.toFixed(0)}k` : `${v.toFixed(0)}`;
+  const errThresh = isIncome ? [3, 7] : [2, 5];
+  const errUnit = isIncome ? 'k' : ' yrs';
 
   let statsHtml = `<div class="dist-stats">`;
-  statsHtml += `<div class="stat-item"><div class="stat-label">True Value</div><div class="stat-val">${fmt(trueVal)}</div></div>`;
-  statsHtml += `<div class="stat-item"><div class="stat-label">Sample Mean</div><div class="stat-val" style="color:${color}">${fmt(mean)}</div></div>`;
-  if (sd !== null) statsHtml += `<div class="stat-item"><div class="stat-label">Sample SD</div><div class="stat-val" style="color:${color}">${sd.toFixed(2)}</div></div>`;
-  statsHtml += `<div class="stat-item"><div class="stat-label">Samples</div><div class="stat-val">${values.length}</div></div>`;
+  statsHtml += `<div class="stat-item"><div class="stat-label">Pop. Mean</div><div class="stat-val">${fmt(popMean)}</div></div>`;
+  if (hasSample) {
+    statsHtml += `<div class="stat-item"><div class="stat-label">Sample Mean</div><div class="stat-val" style="color:${color}">${fmt(samMean)}</div></div>`;
+    statsHtml += `<div class="stat-item"><div class="stat-label">Error</div><div class="stat-val"><span class="est-error ${errorClass(error, errThresh)}">${error > 0 ? '+' : ''}${error.toFixed(1)}${errUnit}</span></div></div>`;
+  }
   statsHtml += `</div>`;
+
+  let legendHtml = `<div class="conv-legend" style="margin-top:0.5rem;">
+    <span><span class="swatch" style="background:var(--navy); opacity:0.25; width:10px; height:10px; border-radius:2px; display:inline-block;"></span> Population</span>
+    ${hasSample ? `<span><span class="swatch" style="background:${color}; opacity:0.7; width:10px; height:10px; border-radius:2px; display:inline-block;"></span> Sample</span>` : ''}
+  </div>`;
 
   return `
     <div class="sampling-dist" id="samplingDist_${key}">
       <h3>${title}</h3>
-      <div class="subtitle">Each bar shows how many samples produced that estimate</div>
       <div style="position:relative;">
         <div class="histogram">
           ${barsHtml}
-          <div class="true-line" style="left:${truePct}%">
-            <div class="true-line-label">Truth: ${fmt(trueVal)}</div>
-          </div>
         </div>
         <div class="hist-axis">
           <span>${fmtAxis(minVal)}</span>
@@ -747,31 +782,28 @@ function buildHistogram(key, title, unit, trueVal, accessor, color) {
         </div>
       </div>
       ${statsHtml}
+      ${legendHtml}
     </div>
   `;
 }
 
 function getPedNote() {
-  if (samplingResults.length === 0) {
+  if (sampleIndices.length === 0) {
     return 'Click "Draw Sample" to select people from the population and see how well the sample reflects reality.';
   }
-  if (samplingResults.length < 5) {
-    return 'Try clicking "Draw Sample" several times — notice how random samples scatter around the true value without systematic bias. Try "Draw 100 Samples" to build up the distribution.';
+  if (sampleN < 100) {
+    return 'With a small sample, the sample distribution may look quite different from the population. Try increasing the sample size to see how the match improves.';
   }
-  return 'Random samples are unbiased: they don\'t systematically over- or underestimate the truth. Individual samples may be off, but on average they\'re right. That\'s the magic of random sampling.';
+  return 'Larger random samples more closely mirror the population distribution. That\'s the power behind polls and surveys — even a fraction of the population can be remarkably representative.';
 }
 
 function newPopulation() {
   generatePopulation();
-  sampleIndices = [];
-  samplingResults = [];
   render();
 }
 
 document.getElementById('sampleSlider').addEventListener('input', function() {
   document.getElementById('nDisplay').textContent = this.value;
-  // Clear history when sample size changes to avoid mixing sizes
-  samplingResults = [];
   sampleIndices = [];
   render();
 });
