@@ -467,6 +467,7 @@ header p {
     </div>
     <button class="btn btn-primary" onclick="drawSample()">Draw Sample</button>
     <button class="btn btn-accent" onclick="runMany()">Draw 100 Samples</button>
+    <button class="btn btn-secondary" onclick="resetSamples()">Reset</button>
     <button class="btn btn-secondary" onclick="newPopulation()">New Population</button>
   </div>
 
@@ -550,7 +551,11 @@ function errorClass(error, thresholds) {
 
 function drawSample() {
   sampleN = parseInt(document.getElementById('sampleSlider').value);
-  sampleIndices = drawRandomSample(sampleN);
+  const newIndices = drawRandomSample(sampleN);
+  // Cumulative: merge new sample into existing
+  const combined = new Set(sampleIndices);
+  newIndices.forEach(i => combined.add(i));
+  sampleIndices = [...combined];
   const stats = computeSampleStats(sampleIndices);
   samplingResults.push(stats);
   render();
@@ -563,7 +568,17 @@ function runMany() {
     const stats = computeSampleStats(indices);
     samplingResults.push(stats);
   }
-  sampleIndices = drawRandomSample(sampleN);
+  // Last draw also cumulative
+  const newIndices = drawRandomSample(sampleN);
+  const combined = new Set(sampleIndices);
+  newIndices.forEach(i => combined.add(i));
+  sampleIndices = [...combined];
+  render();
+}
+
+function resetSamples() {
+  sampleIndices = [];
+  samplingResults = [];
   render();
 }
 
@@ -602,8 +617,8 @@ function render() {
     </div>
   `;
 
-  // People grid — show first 1000 of population
-  const gridSize = 1000;
+  // People grid — show first 2500 of population
+  const gridSize = 2500;
   const sampleSet = new Set(sampleIndices);
   html += `
     <div class="people-grid-section" id="peopleGrid">
@@ -628,7 +643,7 @@ function render() {
   if (stats) {
     html += `
       <div class="sample-result random-sample" id="sampleResult">
-        <h3>Random Sample (n = ${stats.n})</h3>
+        <h3>Cumulative Sample (n = ${sampleIndices.length})</h3>
         <div class="est-row">
           <span class="est-label">Policy Support</span>
           <span class="est-value">
