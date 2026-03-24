@@ -531,23 +531,23 @@ header p {
 .people-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 3px;
+  gap: 1px;
   justify-content: center;
-  max-width: 600px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
 .person-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  transition: opacity 0.2s ease;
 }
 
 .person-dot.support { background: var(--teal); }
 .person-dot.oppose { background: var(--amber); }
-.person-dot.sampled { transform: scale(1.4); opacity: 1; box-shadow: 0 0 0 1.5px var(--navy); }
-.person-dot.not-sampled { opacity: 0.25; }
+.person-dot.sampled { opacity: 1; box-shadow: 0 0 0 1px var(--navy); }
+.person-dot.not-sampled { opacity: 0.15; }
 
 .grid-legend {
   display: flex;
@@ -763,15 +763,14 @@ function render() {
     </div>
   `;
 
-  // People grid (only show for smaller population visualization — show first 500)
-  const gridSize = Math.min(POP_SIZE, 500);
+  // People grid — show all population members
   const sampleSet = new Set(sampleIndices);
   html += `
     <div class="people-grid-section" id="peopleGrid">
       <h3>Population & Sample</h3>
-      <div class="subtitle">Each square is one person (showing first ${gridSize} of ${POP_SIZE.toLocaleString()}). Highlighted = sampled.</div>
+      <div class="subtitle">Each square is one person (${POP_SIZE.toLocaleString()} total). ${sampleIndices.length ? `Highlighted = sampled (${sampleIndices.length}).` : 'Click "Draw Sample" to begin.'}</div>
       <div class="people-grid">
-        ${population.slice(0, gridSize).map((p, i) => {
+        ${population.map((p, i) => {
           const sampled = sampleSet.has(i);
           const cls = (p.support ? 'support' : 'oppose') +
             (sampleIndices.length ? (sampled ? ' sampled' : ' not-sampled') : '');
