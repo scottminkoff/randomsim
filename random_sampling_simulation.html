@@ -705,12 +705,12 @@ function buildDistChart(key, title, popVals, sampleVals, color, isBinary) {
       </div>`;
   }
 
-  // Continuous: overlaid histograms
+  // Continuous: paired bars per bin
   const allVals = popVals;
   const minVal = Math.floor(Math.min(...allVals));
   const maxVal = Math.ceil(Math.max(...allVals));
   const range = maxVal - minVal || 1;
-  const nBins = 20;
+  const nBins = 15;
   const binWidth = range / nBins;
 
   function binData(vals) {
@@ -719,7 +719,6 @@ function buildDistChart(key, title, popVals, sampleVals, color, isBinary) {
       const b = Math.min(nBins - 1, Math.max(0, Math.floor((v - minVal) / binWidth)));
       bins[b]++;
     });
-    // Normalize to proportions
     const total = vals.length || 1;
     return bins.map(c => c / total);
   }
@@ -728,23 +727,23 @@ function buildDistChart(key, title, popVals, sampleVals, color, isBinary) {
   const sampleBins = hasSample ? binData(sampleVals) : null;
   const maxProp = Math.max(...popBins, ...(sampleBins || [0]));
 
-  const barWidthPct = (100 / nBins).toFixed(2);
+  const binPct = 100 / nBins;
+  const gap = binPct * 0.08;
+  const halfBin = (binPct - gap) / 2;
 
   let barsHtml = '';
-  // Population bars (faded)
   popBins.forEach((prop, i) => {
     const h = (prop / maxProp * 100).toFixed(1);
-    const left = (i / nBins * 100).toFixed(2);
-    barsHtml += `<div class="hist-bar" style="left:${left}%; width:${barWidthPct}%; height:${h}%; background:var(--navy); opacity:0.18;"></div>`;
+    const left = (i * binPct).toFixed(2);
+    // Population bar (light)
+    barsHtml += `<div class="hist-bar" style="left:${left}%; width:${halfBin.toFixed(2)}%; height:${h}%; background:${color}; opacity:0.25;"></div>`;
+    // Sample bar (dark)
+    if (sampleBins) {
+      const sh = (sampleBins[i] / maxProp * 100).toFixed(1);
+      const sLeft = (i * binPct + halfBin).toFixed(2);
+      barsHtml += `<div class="hist-bar" style="left:${sLeft}%; width:${halfBin.toFixed(2)}%; height:${sh}%; background:${color};"></div>`;
+    }
   });
-  // Sample bars (colored, semi-transparent overlay)
-  if (sampleBins) {
-    sampleBins.forEach((prop, i) => {
-      const h = (prop / maxProp * 100).toFixed(1);
-      const left = (i / nBins * 100).toFixed(2);
-      barsHtml += `<div class="hist-bar" style="left:${left}%; width:${barWidthPct}%; height:${h}%; background:${color}; opacity:0.7;"></div>`;
-    });
-  }
 
   const popMean = popVals.reduce((a, b) => a + b, 0) / popVals.length;
   const samMean = hasSample ? sampleVals.reduce((a, b) => a + b, 0) / sampleVals.length : null;
@@ -764,8 +763,8 @@ function buildDistChart(key, title, popVals, sampleVals, color, isBinary) {
   statsHtml += `</div>`;
 
   let legendHtml = `<div class="conv-legend" style="margin-top:0.5rem;">
-    <span><span class="swatch" style="background:var(--navy); opacity:0.25; width:10px; height:10px; border-radius:2px; display:inline-block;"></span> Population</span>
-    ${hasSample ? `<span><span class="swatch" style="background:${color}; opacity:0.7; width:10px; height:10px; border-radius:2px; display:inline-block;"></span> Sample</span>` : ''}
+    <span><span class="swatch" style="background:${color}; opacity:0.25; width:10px; height:10px; border-radius:2px; display:inline-block;"></span> Population</span>
+    ${hasSample ? `<span><span class="swatch" style="background:${color}; width:10px; height:10px; border-radius:2px; display:inline-block;"></span> Sample</span>` : ''}
   </div>`;
 
   return `
