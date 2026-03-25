@@ -449,15 +449,15 @@ header p {
 .people-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 1px;
+  gap: 0.5px;
   justify-content: center;
   max-width: 100%;
   margin: 0 auto;
 }
 
 .person-dot {
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
   border-radius: 1px;
   transition: opacity 0.2s ease;
 }
@@ -718,7 +718,7 @@ function render() {
   `;
 
   // People grid — show up to 2500 of population
-  const gridSize = Math.min(2500, POP_SIZE);
+  const gridSize = Math.min(10000, POP_SIZE);
   const sampleSet = new Set(sampleIndices);
   html += `
     <div class="people-grid-section" id="peopleGrid">
