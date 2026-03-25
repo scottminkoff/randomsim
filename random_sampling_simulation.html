@@ -479,7 +479,7 @@ h1, h2, h3 { font-family: 'Source Serif 4', serif; }
 
 .person-dot.dem { background: #2a7de1; }
 .person-dot.rep { background: #e04040; }
-.person-dot.ind { background: var(--purple); }
+.person-dot.ind { background: #FFCE52; }
 .person-dot.sampled { opacity: 1; box-shadow: 0 0 0 1px var(--navy); }
 .person-dot.not-sampled { opacity: 0.15; }
 
@@ -507,7 +507,7 @@ h1, h2, h3 { font-family: 'Source Serif 4', serif; }
 
 .grid-legend .swatch.dem { background: #2a7de1; }
 .grid-legend .swatch.rep { background: #e04040; }
-.grid-legend .swatch.ind { background: var(--purple); }
+.grid-legend .swatch.ind { background: #FFCE52; }
 
 /* Error magnitude coloring */
 .est-error.small { color: var(--green); }
@@ -767,7 +767,7 @@ function render() {
         </div>
         <div class="pop-stat">
           <div class="label">Independent</div>
-          <div class="value" style="color:var(--purple)">${trueInd.toFixed(1)}%</div>
+          <div class="value" style="color:#FFCE52">${trueInd.toFixed(1)}%</div>
         </div>
         <div class="pop-stat">
           <div class="label">Mean Age</div>
@@ -938,7 +938,7 @@ function buildPartyChart(pop, samMembers, stats) {
   const parties = [
     { key: 'dem', label: 'Dem', color: '#2a7de1' },
     { key: 'rep', label: 'Rep', color: '#e04040' },
-    { key: 'ind', label: 'Ind', color: 'var(--purple)' },
+    { key: 'ind', label: 'Ind', color: '#FFCE52' },
   ];
 
   const popN = pop.length;
