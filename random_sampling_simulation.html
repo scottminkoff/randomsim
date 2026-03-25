@@ -197,59 +197,80 @@ header p {
 .sample-result h3 { font-size: 1rem; margin-bottom: 0.75rem; }
 .sample-result.random-sample h3 { color: var(--teal); }
 
-.est-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.45rem 0;
-  border-bottom: 1px solid var(--bg);
-  font-size: 0.9rem;
+.sample-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
 }
 
-.est-label { color: var(--text-light); }
-
-.est-value {
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.est-error {
+.sample-table th {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
   font-size: 0.75rem;
-  padding: 0.1rem 0.5rem;
-  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-light);
+  border-bottom: 2px solid var(--border);
+}
+
+.sample-table td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--bg);
+}
+
+.sample-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.sample-table .row-label {
+  color: var(--text-light);
   font-weight: 500;
 }
 
-.est-error.small { background: #e8f5e9; color: var(--green); }
-.est-error.medium { background: #fff8e1; color: #f57f17; }
-.est-error.large { background: #fdecea; color: var(--red); }
+.sample-table .val { font-weight: 600; color: var(--navy); }
+.sample-table .val-sample { font-weight: 600; color: var(--teal); }
 
-.est-moe {
-  font-size: 0.8rem;
-  font-weight: 600;
+.sample-table .ci-range {
+  font-weight: 500;
   color: var(--navy);
-  background: #eef2f7;
-  padding: 0.1rem 0.5rem;
-  border-radius: 4px;
+  font-size: 0.82rem;
 }
 
 .ci-badge {
   font-size: 0.7rem;
-  padding: 0.1rem 0.5rem;
+  padding: 0.15rem 0.5rem;
   border-radius: 4px;
   font-weight: 500;
+  display: inline-block;
 }
 
 .ci-hit { background: #e8f5e9; color: var(--green); }
 .ci-miss { background: #fdecea; color: var(--red); }
 
-.moe-note {
+.sample-definitions {
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.sample-definitions dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.75rem;
   font-size: 0.78rem;
+  margin: 0;
+}
+
+.sample-definitions dt {
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.sample-definitions dd {
   color: var(--text-light);
-  margin-bottom: 0.5rem;
-  font-style: italic;
+  margin: 0;
 }
 
 /* Sampling distribution */
@@ -475,6 +496,10 @@ header p {
   .controls { flex-direction: column; }
   header h1 { font-size: 1.5rem; }
   .pop-stats { grid-template-columns: 1fr 1fr; }
+  .sample-table { font-size: 0.78rem; }
+  .sample-table th, .sample-table td { padding: 0.4rem 0.35rem; }
+  .sample-definitions dl { grid-template-columns: 1fr; gap: 0.15rem; }
+  .sample-definitions dt { margin-top: 0.4rem; }
 }
 </style>
 </head>
@@ -654,42 +679,61 @@ function render() {
     const ageCovers = Math.abs(ageError) <= stats.moeAge;
     const incomeCovers = Math.abs(incomeError) <= stats.moeIncome;
 
+    const supportLo = (stats.support - stats.moePct).toFixed(1);
+    const supportHi = (stats.support + stats.moePct).toFixed(1);
+    const ageLo = (stats.meanAge - stats.moeAge).toFixed(1);
+    const ageHi = (stats.meanAge + stats.moeAge).toFixed(1);
+    const incomeLo = (stats.meanIncome - stats.moeIncome).toFixed(1);
+    const incomeHi = (stats.meanIncome + stats.moeIncome).toFixed(1);
+
     html += `
       <div class="sample-result random-sample" id="sampleResult">
-        <h3>Random Sample (n = ${stats.n})</h3>
-        <div class="moe-note">95% Confidence Interval: sample estimate &pm; margin of error</div>
-        <div class="est-row">
-          <span class="est-label">Policy Support</span>
-          <span class="est-value">
-            ${stats.support.toFixed(1)}%
-            <span class="est-moe">&pm;${stats.moePct.toFixed(1)} pp</span>
-            <span class="est-error ${errorClass(supportError, [3, 8])}">
-              error: ${supportError > 0 ? '+' : ''}${supportError.toFixed(1)} pp
-            </span>
-            <span class="ci-badge ${supportCovers ? 'ci-hit' : 'ci-miss'}">${supportCovers ? 'CI captures truth' : 'CI misses'}</span>
-          </span>
-        </div>
-        <div class="est-row">
-          <span class="est-label">Mean Age</span>
-          <span class="est-value">
-            ${stats.meanAge.toFixed(1)}
-            <span class="est-moe">&pm;${stats.moeAge.toFixed(1)} yrs</span>
-            <span class="est-error ${errorClass(ageError, [2, 5])}">
-              error: ${ageError > 0 ? '+' : ''}${ageError.toFixed(1)} yrs
-            </span>
-            <span class="ci-badge ${ageCovers ? 'ci-hit' : 'ci-miss'}">${ageCovers ? 'CI captures truth' : 'CI misses'}</span>
-          </span>
-        </div>
-        <div class="est-row">
-          <span class="est-label">Mean Income</span>
-          <span class="est-value">
-            $${stats.meanIncome.toFixed(0)}k
-            <span class="est-moe">&pm;$${stats.moeIncome.toFixed(1)}k</span>
-            <span class="est-error ${errorClass(incomeError, [3, 7])}">
-              error: ${incomeError > 0 ? '+' : ''}${incomeError.toFixed(1)}k
-            </span>
-            <span class="ci-badge ${incomeCovers ? 'ci-hit' : 'ci-miss'}">${incomeCovers ? 'CI captures truth' : 'CI misses'}</span>
-          </span>
+        <h3>Random Sample Results (n = ${stats.n})</h3>
+        <table class="sample-table">
+          <thead>
+            <tr>
+              <th>Measure</th>
+              <th>True Value</th>
+              <th>Sample Estimate</th>
+              <th>95% CI</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="row-label">Policy Support</td>
+              <td class="val">${trueSupport.toFixed(1)}%</td>
+              <td class="val-sample">${stats.support.toFixed(1)}%</td>
+              <td class="ci-range">${supportLo}% to ${supportHi}%</td>
+              <td><span class="ci-badge ${supportCovers ? 'ci-hit' : 'ci-miss'}">${supportCovers ? 'Captured' : 'Missed'}</span></td>
+            </tr>
+            <tr>
+              <td class="row-label">Mean Age</td>
+              <td class="val">${trueMeanAge.toFixed(1)} yrs</td>
+              <td class="val-sample">${stats.meanAge.toFixed(1)} yrs</td>
+              <td class="ci-range">${ageLo} to ${ageHi} yrs</td>
+              <td><span class="ci-badge ${ageCovers ? 'ci-hit' : 'ci-miss'}">${ageCovers ? 'Captured' : 'Missed'}</span></td>
+            </tr>
+            <tr>
+              <td class="row-label">Mean Income</td>
+              <td class="val">$${trueMeanIncome.toFixed(0)}k</td>
+              <td class="val-sample">$${stats.meanIncome.toFixed(0)}k</td>
+              <td class="ci-range">$${incomeLo}k to $${incomeHi}k</td>
+              <td><span class="ci-badge ${incomeCovers ? 'ci-hit' : 'ci-miss'}">${incomeCovers ? 'Captured' : 'Missed'}</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="sample-definitions">
+          <dl>
+            <dt>True Value</dt>
+            <dd>The actual population parameter &mdash; what we would find if we measured every person. In real research this is unknown; here we can see it because we created the population.</dd>
+            <dt>Sample Estimate</dt>
+            <dd>The statistic calculated from our random sample. It approximates the true value but varies from sample to sample due to random chance.</dd>
+            <dt>95% CI</dt>
+            <dd>The 95% confidence interval is the range within which we expect the true value to fall. If we repeated this sampling process many times, about 95% of the intervals would contain the true value.</dd>
+            <dt>Captured / Missed</dt>
+            <dd>Whether this particular confidence interval contains the true population value. Over many samples, roughly 95% should read "Captured."</dd>
+          </dl>
         </div>
       </div>
     `;
