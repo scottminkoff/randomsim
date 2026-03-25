@@ -492,6 +492,26 @@ header p {
 .grid-legend .swatch.sup { background: var(--teal); }
 .grid-legend .swatch.opp { background: var(--amber); }
 
+/* Error magnitude coloring */
+.est-error.small { color: var(--green); }
+.est-error.medium { color: var(--amber); }
+.est-error.large { color: var(--red); }
+
+/* Conv legend */
+.conv-legend {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: var(--text-light);
+}
+
+.conv-legend span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* Convergence scatter plots */
 .scatter-section {
   background: var(--card-bg);
@@ -679,7 +699,7 @@ function errorClass(error, thresholds) {
 }
 
 function drawSample() {
-  sampleN = parseInt(document.getElementById('sampleSlider').value);
+  sampleN = Math.min(parseInt(document.getElementById('sampleSlider').value), POP_SIZE);
   sampleIndices = drawRandomSample(sampleN);
   const stats = computeSampleStats(sampleIndices);
   drawHistory.push({ n: stats.n, support: stats.support, meanAge: stats.meanAge, meanIncome: stats.meanIncome });
@@ -905,8 +925,13 @@ function buildDistChart(key, title, popVals, sampleVals, color, isBinary, moe) {
 
   // Continuous: paired bars per bin
   const allVals = popVals;
-  const minVal = Math.floor(Math.min(...allVals));
-  const maxVal = Math.ceil(Math.max(...allVals));
+  let minVal = Infinity, maxVal = -Infinity;
+  for (let i = 0; i < allVals.length; i++) {
+    if (allVals[i] < minVal) minVal = allVals[i];
+    if (allVals[i] > maxVal) maxVal = allVals[i];
+  }
+  minVal = Math.floor(minVal);
+  maxVal = Math.ceil(maxVal);
   const range = maxVal - minVal || 1;
   const nBins = 15;
   const binWidth = range / nBins;
@@ -1141,6 +1166,11 @@ function newPopulation() {
 document.getElementById('popSlider').addEventListener('input', function() {
   document.getElementById('popDisplay').textContent = parseInt(this.value).toLocaleString();
   POP_SIZE = parseInt(this.value);
+  const sampleSlider = document.getElementById('sampleSlider');
+  if (parseInt(sampleSlider.value) > POP_SIZE) {
+    sampleSlider.value = POP_SIZE;
+    document.getElementById('nDisplay').textContent = POP_SIZE;
+  }
   drawHistory = [];
   generatePopulation();
   sampleIndices = [];
