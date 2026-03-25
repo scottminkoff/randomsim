@@ -198,7 +198,7 @@ h1, h2, h3 { font-family: 'Source Serif 4', serif; }
 }
 
 .sample-result.visible { opacity: 1; transform: translateY(0); }
-.sample-result.random-sample { border-top: 3px solid var(--teal); }
+.sample-result.random-sample { border-top: 3px solid var(--navy); }
 
 .sample-result h3 { font-size: 1rem; margin-bottom: 0.75rem; }
 .sample-result.random-sample h3 { color: var(--teal); }
@@ -236,7 +236,7 @@ h1, h2, h3 { font-family: 'Source Serif 4', serif; }
 }
 
 .sample-table .val { font-weight: 600; color: var(--navy); }
-.sample-table .val-sample { font-weight: 600; color: var(--teal); }
+.sample-table .val-sample { font-weight: 600; color: var(--navy); }
 
 .sample-table .ci-range {
   font-weight: 500;
@@ -477,8 +477,9 @@ h1, h2, h3 { font-family: 'Source Serif 4', serif; }
   transition: opacity 0.2s ease;
 }
 
-.person-dot.support { background: var(--teal); }
-.person-dot.oppose { background: var(--amber); }
+.person-dot.dem { background: #2a7de1; }
+.person-dot.rep { background: #e04040; }
+.person-dot.ind { background: var(--purple); }
 .person-dot.sampled { opacity: 1; box-shadow: 0 0 0 1px var(--navy); }
 .person-dot.not-sampled { opacity: 0.15; }
 
@@ -504,8 +505,9 @@ h1, h2, h3 { font-family: 'Source Serif 4', serif; }
   border-radius: 2px;
 }
 
-.grid-legend .swatch.sup { background: var(--teal); }
-.grid-legend .swatch.opp { background: var(--amber); }
+.grid-legend .swatch.dem { background: #2a7de1; }
+.grid-legend .swatch.rep { background: #e04040; }
+.grid-legend .swatch.ind { background: var(--purple); }
 
 /* Error magnitude coloring */
 .est-error.small { color: var(--green); }
@@ -625,10 +627,12 @@ let POP_SIZE = 10000;
 let population = [];
 let sampleIndices = [];
 let sampleN = 50;
-let drawHistory = []; // {n, support, meanAge, meanIncome}
+let drawHistory = []; // {n, dem, rep, ind, meanAge, meanIncome}
 
 // Population parameters (set when generating)
-let trueSupport = 0;
+let trueDem = 0;
+let trueRep = 0;
+let trueInd = 0;
 let trueMeanAge = 0;
 let trueMeanIncome = 0;
 
@@ -641,7 +645,9 @@ function randNorm(mu, sigma) {
 function generatePopulation() {
   population = [];
   // Randomize population parameters each time
-  const baseSupportRate = 0.35 + Math.random() * 0.30;
+  const baseDemRate = 0.30 + Math.random() * 0.05;    // 30–35%
+  const baseRepRate = 0.30 + Math.random() * 0.05;    // 30–35%
+  // Remainder is Independent
   const baseMeanAge = 38 + Math.random() * 14;        // 38–52
   const baseAgeSigma = 12 + Math.random() * 8;        // 12–20
   const baseMeanIncome = 40 + Math.random() * 30;     // $40k–$70k
@@ -649,19 +655,30 @@ function generatePopulation() {
 
   for (let i = 0; i < POP_SIZE; i++) {
     const age = Math.max(18, Math.min(85, Math.round(randNorm(baseMeanAge, baseAgeSigma))));
-    // Income correlated with age somewhat
     const income = Math.max(15, Math.min(200, Math.round(randNorm(baseMeanIncome + (age - baseMeanAge) * 0.3, baseIncomeSigma))));
-    // Support probability slightly varies by age and income
-    const ageFactor = (age - baseMeanAge) * 0.003;
-    const incomeFactor = (income - baseMeanIncome) * 0.002;
-    const supportProb = Math.max(0.05, Math.min(0.95, baseSupportRate + ageFactor * -1 + incomeFactor));
-    const support = Math.random() < supportProb;
+    // Party ID with slight demographic variation
+    const ageFactor = (age - baseMeanAge) * 0.002;
+    const incomeFactor = (income - baseMeanIncome) * 0.001;
+    const demProb = Math.max(0.05, Math.min(0.60, baseDemRate - ageFactor + incomeFactor * -1));
+    const repProb = Math.max(0.05, Math.min(0.60, baseRepRate + ageFactor + incomeFactor));
+    const total = demProb + repProb;
+    const normDem = demProb / Math.max(total, 0.01);
+    const normRep = repProb / Math.max(total, 0.01);
+    // Scale so dem+rep leaves room for independents
+    const partyScale = Math.min(1, (demProb + repProb) / (baseDemRate + baseRepRate));
+    const r = Math.random();
+    let party;
+    if (r < demProb) party = 'dem';
+    else if (r < demProb + repProb) party = 'rep';
+    else party = 'ind';
 
-    population.push({ age, income, support, idx: i });
+    population.push({ age, income, party, idx: i });
   }
 
   // Compute true values
-  trueSupport = population.filter(p => p.support).length / POP_SIZE * 100;
+  trueDem = population.filter(p => p.party === 'dem').length / POP_SIZE * 100;
+  trueRep = population.filter(p => p.party === 'rep').length / POP_SIZE * 100;
+  trueInd = population.filter(p => p.party === 'ind').length / POP_SIZE * 100;
   trueMeanAge = population.reduce((s, p) => s + p.age, 0) / POP_SIZE;
   trueMeanIncome = population.reduce((s, p) => s + p.income, 0) / POP_SIZE;
 
@@ -682,22 +699,28 @@ function drawRandomSample(n) {
 function computeSampleStats(indices) {
   const members = indices.map(i => population[i]);
   const n = members.length;
-  const support = members.filter(p => p.support).length / n * 100;
+  const dem = members.filter(p => p.party === 'dem').length / n * 100;
+  const rep = members.filter(p => p.party === 'rep').length / n * 100;
+  const ind = members.filter(p => p.party === 'ind').length / n * 100;
   const meanAge = members.reduce((s, p) => s + p.age, 0) / n;
   const meanIncome = members.reduce((s, p) => s + p.income, 0) / n;
 
   // Margin of error at 95% confidence (z = 1.96)
   const z = 1.96;
   // Proportion MOE: z * sqrt(p*(1-p)/n)
-  const pHat = support / 100;
-  const moePct = z * Math.sqrt(pHat * (1 - pHat) / n) * 100;
+  const pDem = dem / 100;
+  const moeDem = z * Math.sqrt(pDem * (1 - pDem) / n) * 100;
+  const pRep = rep / 100;
+  const moeRep = z * Math.sqrt(pRep * (1 - pRep) / n) * 100;
+  const pInd = ind / 100;
+  const moeInd = z * Math.sqrt(pInd * (1 - pInd) / n) * 100;
   // Mean MOEs: z * (s / sqrt(n))
   const sdAge = Math.sqrt(members.reduce((s, p) => s + (p.age - meanAge) ** 2, 0) / (n - 1));
   const moeAge = z * sdAge / Math.sqrt(n);
   const sdIncome = Math.sqrt(members.reduce((s, p) => s + (p.income - meanIncome) ** 2, 0) / (n - 1));
   const moeIncome = z * sdIncome / Math.sqrt(n);
 
-  return { support, meanAge, meanIncome, n, moePct, moeAge, moeIncome };
+  return { dem, rep, ind, meanAge, meanIncome, n, moeDem, moeRep, moeInd, moeAge, moeIncome };
 }
 
 function errorClass(error, thresholds) {
@@ -711,7 +734,7 @@ function drawSample() {
   sampleN = Math.min(parseInt(document.getElementById('sampleSlider').value), POP_SIZE);
   sampleIndices = drawRandomSample(sampleN);
   const stats = computeSampleStats(sampleIndices);
-  drawHistory.push({ n: stats.n, support: stats.support, meanAge: stats.meanAge, meanIncome: stats.meanIncome });
+  drawHistory.push({ n: stats.n, dem: stats.dem, rep: stats.rep, ind: stats.ind, meanAge: stats.meanAge, meanIncome: stats.meanIncome });
   render();
 }
 
@@ -719,7 +742,9 @@ function render() {
   const area = document.getElementById('resultsArea');
 
   const stats = sampleIndices.length ? computeSampleStats(sampleIndices) : null;
-  const supportError = stats ? stats.support - trueSupport : 0;
+  const demError = stats ? stats.dem - trueDem : 0;
+  const repError = stats ? stats.rep - trueRep : 0;
+  const indError = stats ? stats.ind - trueInd : 0;
   const ageError = stats ? stats.meanAge - trueMeanAge : 0;
   const incomeError = stats ? stats.meanIncome - trueMeanIncome : 0;
 
@@ -733,8 +758,16 @@ function render() {
       <h3>Population Truth (N = ${POP_SIZE.toLocaleString()})</h3>
       <div class="pop-stats">
         <div class="pop-stat">
-          <div class="label">Policy Support</div>
-          <div class="value">${trueSupport.toFixed(1)}%</div>
+          <div class="label">Democrat</div>
+          <div class="value" style="color:#2a7de1">${trueDem.toFixed(1)}%</div>
+        </div>
+        <div class="pop-stat">
+          <div class="label">Republican</div>
+          <div class="value" style="color:#e04040">${trueRep.toFixed(1)}%</div>
+        </div>
+        <div class="pop-stat">
+          <div class="label">Independent</div>
+          <div class="value" style="color:var(--purple)">${trueInd.toFixed(1)}%</div>
         </div>
         <div class="pop-stat">
           <div class="label">Mean Age</div>
@@ -757,14 +790,15 @@ function render() {
       <div class="people-grid">
         ${population.slice(0, gridSize).map((p, i) => {
           const sampled = sampleSet.has(i);
-          const cls = (p.support ? 'support' : 'oppose') +
+          const cls = p.party +
             (sampleIndices.length ? (sampled ? ' sampled' : ' not-sampled') : '');
           return `<div class="person-dot ${cls}"></div>`;
         }).join('')}
       </div>
       <div class="grid-legend">
-        <span><span class="swatch sup"></span> Supports policy</span>
-        <span><span class="swatch opp"></span> Opposes policy</span>
+        <span><span class="swatch dem"></span> Democrat</span>
+        <span><span class="swatch rep"></span> Republican</span>
+        <span><span class="swatch ind"></span> Independent</span>
       </div>
     </div>
   `;
@@ -773,15 +807,21 @@ function render() {
   let rightCol = '';
 
   const hasStats = !!stats;
-  let supportCovers, ageCovers, incomeCovers;
-  let supportLo, supportHi, ageLo, ageHi, incomeLo, incomeHi;
+  let demCovers, repCovers, indCovers, ageCovers, incomeCovers;
+  let demLo, demHi, repLo, repHi, indLo, indHi, ageLo, ageHi, incomeLo, incomeHi;
 
   if (hasStats) {
-    supportCovers = Math.abs(supportError) <= stats.moePct;
+    demCovers = Math.abs(demError) <= stats.moeDem;
+    repCovers = Math.abs(repError) <= stats.moeRep;
+    indCovers = Math.abs(indError) <= stats.moeInd;
     ageCovers = Math.abs(ageError) <= stats.moeAge;
     incomeCovers = Math.abs(incomeError) <= stats.moeIncome;
-    supportLo = (stats.support - stats.moePct).toFixed(1);
-    supportHi = (stats.support + stats.moePct).toFixed(1);
+    demLo = (stats.dem - stats.moeDem).toFixed(1);
+    demHi = (stats.dem + stats.moeDem).toFixed(1);
+    repLo = (stats.rep - stats.moeRep).toFixed(1);
+    repHi = (stats.rep + stats.moeRep).toFixed(1);
+    indLo = (stats.ind - stats.moeInd).toFixed(1);
+    indHi = (stats.ind + stats.moeInd).toFixed(1);
     ageLo = (stats.meanAge - stats.moeAge).toFixed(1);
     ageHi = (stats.meanAge + stats.moeAge).toFixed(1);
     incomeLo = (stats.meanIncome - stats.moeIncome).toFixed(1);
@@ -803,11 +843,25 @@ function render() {
         </thead>
         <tbody>
           <tr>
-            <td class="row-label">Policy Support</td>
-            <td class="val">${trueSupport.toFixed(1)}%</td>
-            <td class="val-sample">${hasStats ? stats.support.toFixed(1) + '%' : '—'}</td>
-            <td class="ci-range">${hasStats ? supportLo + '% to ' + supportHi + '%' : '—'}</td>
-            <td>${hasStats ? `<span class="ci-badge ${supportCovers ? 'ci-hit' : 'ci-miss'}">${supportCovers ? 'Captured' : 'Missed'}</span>` : ''}</td>
+            <td class="row-label">Democrat %</td>
+            <td class="val">${trueDem.toFixed(1)}%</td>
+            <td class="val-sample">${hasStats ? stats.dem.toFixed(1) + '%' : '—'}</td>
+            <td class="ci-range">${hasStats ? demLo + '% to ' + demHi + '%' : '—'}</td>
+            <td>${hasStats ? `<span class="ci-badge ${demCovers ? 'ci-hit' : 'ci-miss'}">${demCovers ? 'Captured' : 'Missed'}</span>` : ''}</td>
+          </tr>
+          <tr>
+            <td class="row-label">Republican %</td>
+            <td class="val">${trueRep.toFixed(1)}%</td>
+            <td class="val-sample">${hasStats ? stats.rep.toFixed(1) + '%' : '—'}</td>
+            <td class="ci-range">${hasStats ? repLo + '% to ' + repHi + '%' : '—'}</td>
+            <td>${hasStats ? `<span class="ci-badge ${repCovers ? 'ci-hit' : 'ci-miss'}">${repCovers ? 'Captured' : 'Missed'}</span>` : ''}</td>
+          </tr>
+          <tr>
+            <td class="row-label">Independent %</td>
+            <td class="val">${trueInd.toFixed(1)}%</td>
+            <td class="val-sample">${hasStats ? stats.ind.toFixed(1) + '%' : '—'}</td>
+            <td class="ci-range">${hasStats ? indLo + '% to ' + indHi + '%' : '—'}</td>
+            <td>${hasStats ? `<span class="ci-badge ${indCovers ? 'ci-hit' : 'ci-miss'}">${indCovers ? 'Captured' : 'Missed'}</span>` : ''}</td>
           </tr>
           <tr>
             <td class="row-label">Mean Age</td>
@@ -831,7 +885,7 @@ function render() {
   // Distribution comparison charts
   const sampleMembers = sampleIndices.map(i => population[i]);
   rightCol += `<div class="histograms-row">`;
-  rightCol += buildDistChart('support', 'Policy Support', population.map(p => p.support ? 1 : 0), sampleMembers.map(p => p.support ? 1 : 0), 'var(--teal)', true, stats ? stats.moePct : null);
+  rightCol += buildPartyChart(population, sampleMembers, stats);
   rightCol += buildDistChart('age', 'Age Distribution', population.map(p => p.age), sampleMembers.map(p => p.age), 'var(--purple)', false, stats ? stats.moeAge : null);
   rightCol += buildDistChart('income', 'Income Distribution ($k)', population.map(p => p.income), sampleMembers.map(p => p.income), 'var(--amber)', false, stats ? stats.moeIncome : null);
   rightCol += `</div>`;
@@ -843,8 +897,8 @@ function render() {
       <div class="subtitle">Each dot is one sample draw. The dashed line marks the true value. Draw multiple samples to see estimates converge.</div>
       <div class="scatter-row">
         <div class="scatter-card">
-          <div class="scatter-title">Policy Support</div>
-          <canvas id="scatter_support"></canvas>
+          <div class="scatter-title">Democrat %</div>
+          <canvas id="scatter_dem"></canvas>
         </div>
         <div class="scatter-card">
           <div class="scatter-title">Mean Age</div>
@@ -879,55 +933,51 @@ function render() {
   });
 }
 
+function buildPartyChart(pop, samMembers, stats) {
+  const hasSample = samMembers.length > 0;
+  const parties = [
+    { key: 'dem', label: 'Dem', color: '#2a7de1' },
+    { key: 'rep', label: 'Rep', color: '#e04040' },
+    { key: 'ind', label: 'Ind', color: 'var(--purple)' },
+  ];
+
+  const popN = pop.length;
+  const samN = samMembers.length || 1;
+  const popCounts = { dem: 0, rep: 0, ind: 0 };
+  const samCounts = { dem: 0, rep: 0, ind: 0 };
+  pop.forEach(p => popCounts[p.party]++);
+  samMembers.forEach(p => samCounts[p.party]++);
+
+  let barsHtml = `<div style="display:flex; gap:0.75rem; justify-content:center; align-items:flex-end; height:140px; padding:0 0.5rem;">`;
+  parties.forEach(pt => {
+    const popPct = popCounts[pt.key] / popN * 100;
+    const samPct = hasSample ? samCounts[pt.key] / samN * 100 : null;
+    barsHtml += `
+      <div style="text-align:center; flex:1;">
+        <div style="display:flex; gap:3px; justify-content:center; align-items:flex-end; height:120px;">
+          <div style="width:28px; background:${pt.color}; opacity:0.25; border-radius:3px 3px 0 0; height:${popPct * 1.6}px;" title="Population: ${popPct.toFixed(1)}%"></div>
+          ${hasSample ? `<div style="width:28px; background:${pt.color}; border-radius:3px 3px 0 0; height:${samPct * 1.6}px;" title="Sample: ${samPct.toFixed(1)}%"></div>` : ''}
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-light); margin-top:4px;">${pt.label}</div>
+      </div>`;
+  });
+  barsHtml += `</div>`;
+
+  let legendHtml = `<div class="conv-legend" style="margin-top:0.5rem;">
+    <span style="opacity:0.4;">&#9632; Population</span>
+    ${hasSample ? `<span>&#9632; Sample</span>` : ''}
+  </div>`;
+
+  return `
+    <div class="sampling-dist" id="samplingDist_party">
+      <h3>Party Identification</h3>
+      ${barsHtml}
+      ${legendHtml}
+    </div>`;
+}
+
 function buildDistChart(key, title, popVals, sampleVals, color, isBinary, moe) {
   const hasSample = sampleVals.length > 0;
-
-  if (isBinary) {
-    // Bar chart: support vs oppose, population vs sample
-    const popPct = (popVals.filter(v => v === 1).length / popVals.length * 100);
-    const samPct = hasSample ? (sampleVals.filter(v => v === 1).length / sampleVals.length * 100) : null;
-    const error = samPct !== null ? samPct - popPct : null;
-
-    let barsHtml = `
-      <div style="display:flex; gap:1.5rem; justify-content:center; align-items:flex-end; height:140px; padding:0 1rem;">
-        <div style="text-align:center; flex:1;">
-          <div style="display:flex; gap:4px; justify-content:center; align-items:flex-end; height:120px;">
-            <div style="width:36px; background:${color}; opacity:0.25; border-radius:3px 3px 0 0; height:${popPct * 1.1}px;" title="Population: ${popPct.toFixed(1)}%"></div>
-            ${hasSample ? `<div style="width:36px; background:${color}; border-radius:3px 3px 0 0; height:${samPct * 1.1}px;" title="Sample: ${samPct.toFixed(1)}%"></div>` : ''}
-          </div>
-          <div style="font-size:0.75rem; color:var(--text-light); margin-top:4px;">Support</div>
-        </div>
-        <div style="text-align:center; flex:1;">
-          <div style="display:flex; gap:4px; justify-content:center; align-items:flex-end; height:120px;">
-            <div style="width:36px; background:${color}; opacity:0.25; border-radius:3px 3px 0 0; height:${(100 - popPct) * 1.1}px;" title="Population: ${(100 - popPct).toFixed(1)}%"></div>
-            ${hasSample ? `<div style="width:36px; background:${color}; border-radius:3px 3px 0 0; height:${(100 - samPct) * 1.1}px;" title="Sample: ${(100 - samPct).toFixed(1)}%"></div>` : ''}
-          </div>
-          <div style="font-size:0.75rem; color:var(--text-light); margin-top:4px;">Oppose</div>
-        </div>
-      </div>`;
-
-    let statsHtml = `<div class="dist-stats">`;
-    statsHtml += `<div class="stat-item"><div class="stat-label">Population</div><div class="stat-val">${popPct.toFixed(1)}%</div></div>`;
-    if (hasSample) {
-      statsHtml += `<div class="stat-item"><div class="stat-label">Sample</div><div class="stat-val" style="color:${color}">${samPct.toFixed(1)}%</div></div>`;
-      statsHtml += `<div class="stat-item"><div class="stat-label">MOE</div><div class="stat-val">&pm;${moe !== null ? moe.toFixed(1) : '?'} pp</div></div>`;
-      statsHtml += `<div class="stat-item"><div class="stat-label">Error</div><div class="stat-val"><span class="est-error ${errorClass(error, [3, 8])}">${error > 0 ? '+' : ''}${error.toFixed(1)} pp</span></div></div>`;
-    }
-    statsHtml += `</div>`;
-
-    let legendHtml = `<div class="conv-legend" style="margin-top:0.5rem;">
-      <span><span class="swatch" style="background:${color}; opacity:0.25; width:10px; height:10px; border-radius:2px; display:inline-block;"></span> Population</span>
-      ${hasSample ? `<span><span class="swatch" style="background:${color}; width:10px; height:10px; border-radius:2px; display:inline-block;"></span> Sample</span>` : ''}
-    </div>`;
-
-    return `
-      <div class="sampling-dist" id="samplingDist_${key}">
-        <h3>${title}</h3>
-        ${barsHtml}
-        ${statsHtml}
-        ${legendHtml}
-      </div>`;
-  }
 
   // Continuous: paired bars per bin
   const allVals = popVals;
@@ -1019,7 +1069,7 @@ function buildDistChart(key, title, popVals, sampleVals, color, isBinary, moe) {
 
 function renderScatterPlots() {
   const configs = [
-    { id: 'scatter_support', key: 'support', label: 'Policy Support (%)', color: '#2a9d8f', trueVal: trueSupport, fmt: v => v.toFixed(1) + '%' },
+    { id: 'scatter_dem', key: 'dem', label: 'Democrat (%)', color: '#2a7de1', trueVal: trueDem, fmt: v => v.toFixed(1) + '%' },
     { id: 'scatter_age', key: 'meanAge', label: 'Mean Age', color: '#6c5ce7', trueVal: trueMeanAge, fmt: v => v.toFixed(1) },
     { id: 'scatter_income', key: 'meanIncome', label: 'Mean Income', color: '#e9a820', trueVal: trueMeanIncome, fmt: v => '$' + v.toFixed(0) + 'k' },
   ];
@@ -1050,12 +1100,12 @@ function renderScatterPlots() {
     if (vals.length > 0) {
       const dataMin = Math.min(...allVals);
       const dataMax = Math.max(...allVals);
-      const yPad = Math.max((dataMax - dataMin) * 0.15, cfg.key === 'support' ? 5 : cfg.key === 'meanIncome' ? 3 : 2);
+      const yPad = Math.max((dataMax - dataMin) * 0.15, cfg.key === 'dem' ? 5 : cfg.key === 'meanIncome' ? 3 : 2);
       yMin = dataMin - yPad;
       yMax = dataMax + yPad;
     } else {
       // No data yet — show range around true value
-      const spread = cfg.key === 'support' ? 15 : cfg.key === 'meanIncome' ? 10 : 8;
+      const spread = cfg.key === 'dem' ? 15 : cfg.key === 'meanIncome' ? 10 : 8;
       yMin = cfg.trueVal - spread;
       yMax = cfg.trueVal + spread;
     }
