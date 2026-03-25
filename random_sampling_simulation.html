@@ -492,6 +492,69 @@ header p {
 .grid-legend .swatch.sup { background: var(--teal); }
 .grid-legend .swatch.opp { background: var(--amber); }
 
+/* Convergence scatter plots */
+.scatter-section {
+  background: var(--card-bg);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.4s ease 0.3s, transform 0.4s ease 0.3s;
+}
+
+.scatter-section.visible { opacity: 1; transform: translateY(0); }
+
+.scatter-section h3 {
+  font-size: 1rem;
+  color: var(--navy);
+  margin-bottom: 0.25rem;
+  text-align: center;
+}
+
+.scatter-section .subtitle {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.scatter-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.scatter-card {
+  text-align: center;
+}
+
+.scatter-card .scatter-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+}
+
+.scatter-card canvas {
+  width: 100%;
+  height: 200px;
+  display: block;
+}
+
+.scatter-count {
+  font-size: 0.78rem;
+  color: var(--text-light);
+  text-align: center;
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .scatter-row { grid-template-columns: 1fr; }
+  .scatter-card canvas { height: 180px; }
+}
+
 @media (max-width: 700px) {
   .controls { flex-direction: column; }
   header h1 { font-size: 1.5rem; }
@@ -537,6 +600,7 @@ let POP_SIZE = 10000;
 let population = [];
 let sampleIndices = [];
 let sampleN = 50;
+let drawHistory = []; // {n, support, meanAge, meanIncome}
 
 // Population parameters (set when generating)
 let trueSupport = 0;
@@ -617,6 +681,8 @@ function errorClass(error, thresholds) {
 function drawSample() {
   sampleN = parseInt(document.getElementById('sampleSlider').value);
   sampleIndices = drawRandomSample(sampleN);
+  const stats = computeSampleStats(sampleIndices);
+  drawHistory.push({ n: stats.n, support: stats.support, meanAge: stats.meanAge, meanIncome: stats.meanIncome });
   render();
 }
 
@@ -747,14 +813,40 @@ function render() {
   html += buildDistChart('income', 'Income Distribution ($k)', population.map(p => p.income), sampleMembers.map(p => p.income), 'var(--amber)', false, stats ? stats.moeIncome : null);
   html += `</div>`;
 
+  // Convergence scatter plots
+  html += `
+    <div class="scatter-section" id="scatterSection">
+      <h3>Estimate Convergence</h3>
+      <div class="subtitle">Each dot is one sample draw. The dashed line marks the true population value. Draw multiple samples to see estimates converge.</div>
+      <div class="scatter-row">
+        <div class="scatter-card">
+          <div class="scatter-title">Policy Support</div>
+          <canvas id="scatter_support"></canvas>
+        </div>
+        <div class="scatter-card">
+          <div class="scatter-title">Mean Age</div>
+          <canvas id="scatter_age"></canvas>
+        </div>
+        <div class="scatter-card">
+          <div class="scatter-title">Mean Income</div>
+          <canvas id="scatter_income"></canvas>
+        </div>
+      </div>
+      <div class="scatter-count">${drawHistory.length} sample${drawHistory.length !== 1 ? 's' : ''} drawn</div>
+    </div>
+  `;
+
   // Pedagogy note
   html += `<p class="pedagogy-note" id="pedNote">${getPedNote()}</p>`;
 
   area.innerHTML = html;
 
+  // Render scatter plots (must happen after innerHTML so canvases exist)
+  renderScatterPlots();
+
   // Animate in
   requestAnimationFrame(() => {
-    document.querySelectorAll('.pop-overview, .people-grid-section, .sample-result, .sampling-dist')
+    document.querySelectorAll('.pop-overview, .people-grid-section, .sample-result, .sampling-dist, .scatter-section')
       .forEach((el, i) => {
         setTimeout(() => el.classList.add('visible'), i * 80);
       });
@@ -894,6 +986,142 @@ function buildDistChart(key, title, popVals, sampleVals, color, isBinary, moe) {
   `;
 }
 
+function renderScatterPlots() {
+  const configs = [
+    { id: 'scatter_support', key: 'support', label: 'Policy Support (%)', color: '#2a9d8f', trueVal: trueSupport, fmt: v => v.toFixed(1) + '%' },
+    { id: 'scatter_age', key: 'meanAge', label: 'Mean Age', color: '#6c5ce7', trueVal: trueMeanAge, fmt: v => v.toFixed(1) },
+    { id: 'scatter_income', key: 'meanIncome', label: 'Mean Income', color: '#e9a820', trueVal: trueMeanIncome, fmt: v => '$' + v.toFixed(0) + 'k' },
+  ];
+
+  configs.forEach(cfg => {
+    const canvas = document.getElementById(cfg.id);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    const W = rect.width;
+    const H = rect.height;
+
+    const pad = { top: 20, right: 20, bottom: 32, left: 50 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Determine axis ranges
+    const vals = drawHistory.map(d => d[cfg.key]);
+    const ns = drawHistory.map(d => d.n);
+    const allVals = [...vals, cfg.trueVal];
+    let yMin, yMax;
+    if (vals.length > 0) {
+      const dataMin = Math.min(...allVals);
+      const dataMax = Math.max(...allVals);
+      const yPad = Math.max((dataMax - dataMin) * 0.15, cfg.key === 'support' ? 5 : cfg.key === 'meanIncome' ? 3 : 2);
+      yMin = dataMin - yPad;
+      yMax = dataMax + yPad;
+    } else {
+      // No data yet — show range around true value
+      const spread = cfg.key === 'support' ? 15 : cfg.key === 'meanIncome' ? 10 : 8;
+      yMin = cfg.trueVal - spread;
+      yMax = cfg.trueVal + spread;
+    }
+
+    const xMin = 0;
+    const xMax = Math.max(2000, ...ns, parseInt(document.getElementById('sampleSlider').value));
+
+    function toX(n) { return pad.left + (n - xMin) / (xMax - xMin) * plotW; }
+    function toY(v) { return pad.top + (1 - (v - yMin) / (yMax - yMin)) * plotH; }
+
+    // Grid lines
+    ctx.strokeStyle = '#e8ecf0';
+    ctx.lineWidth = 1;
+    const yTicks = 5;
+    for (let i = 0; i <= yTicks; i++) {
+      const y = pad.top + (i / yTicks) * plotH;
+      ctx.beginPath();
+      ctx.moveTo(pad.left, y);
+      ctx.lineTo(W - pad.right, y);
+      ctx.stroke();
+    }
+
+    // True value line
+    const trueY = toY(cfg.trueVal);
+    ctx.strokeStyle = '#1a2744';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(pad.left, trueY);
+    ctx.lineTo(W - pad.right, trueY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // True value label
+    ctx.fillStyle = '#1a2744';
+    ctx.font = '600 11px Inter, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('True: ' + cfg.fmt(cfg.trueVal), pad.left + 4, trueY - 6);
+
+    // Dots
+    drawHistory.forEach((d, i) => {
+      const x = toX(d.n);
+      const y = toY(d[cfg.key]);
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = cfg.color;
+      ctx.globalAlpha = 0.7;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = cfg.color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Highlight the most recent dot
+      if (i === drawHistory.length - 1) {
+        ctx.beginPath();
+        ctx.arc(x, y, 8, 0, Math.PI * 2);
+        ctx.strokeStyle = cfg.color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    });
+
+    // Axes
+    ctx.strokeStyle = '#bcc5d0';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, pad.top);
+    ctx.lineTo(pad.left, H - pad.bottom);
+    ctx.lineTo(W - pad.right, H - pad.bottom);
+    ctx.stroke();
+
+    // X-axis labels
+    ctx.fillStyle = '#5a6c7d';
+    ctx.font = '11px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    const xTickCount = 4;
+    for (let i = 0; i <= xTickCount; i++) {
+      const val = xMin + (i / xTickCount) * (xMax - xMin);
+      ctx.fillText(Math.round(val).toLocaleString(), toX(val), H - pad.bottom + 16);
+    }
+
+    // Y-axis labels
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= yTicks; i++) {
+      const val = yMax - (i / yTicks) * (yMax - yMin);
+      ctx.fillText(cfg.fmt(val), pad.left - 6, pad.top + (i / yTicks) * plotH + 4);
+    }
+
+    // X-axis title
+    ctx.fillStyle = '#5a6c7d';
+    ctx.font = '11px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Sample Size (n)', pad.left + plotW / 2, H - 2);
+  });
+}
+
 function getPedNote() {
   if (sampleIndices.length === 0) {
     return 'Click "Draw Sample" to select people from the population and see how well the sample reflects reality.';
@@ -905,6 +1133,7 @@ function getPedNote() {
 }
 
 function newPopulation() {
+  drawHistory = [];
   generatePopulation();
   render();
 }
@@ -912,6 +1141,7 @@ function newPopulation() {
 document.getElementById('popSlider').addEventListener('input', function() {
   document.getElementById('popDisplay').textContent = parseInt(this.value).toLocaleString();
   POP_SIZE = parseInt(this.value);
+  drawHistory = [];
   generatePopulation();
   sampleIndices = [];
   render();
@@ -919,6 +1149,7 @@ document.getElementById('popSlider').addEventListener('input', function() {
 
 document.getElementById('sampleSlider').addEventListener('input', function() {
   document.getElementById('nDisplay').textContent = this.value;
+  drawHistory = [];
   sampleIndices = [];
   render();
 });
