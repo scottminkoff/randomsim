@@ -640,16 +640,20 @@ function randNorm(mu, sigma) {
 
 function generatePopulation() {
   population = [];
-  // Support rate between 35-65%
+  // Randomize population parameters each time
   const baseSupportRate = 0.35 + Math.random() * 0.30;
+  const baseMeanAge = 38 + Math.random() * 14;        // 38–52
+  const baseAgeSigma = 12 + Math.random() * 8;        // 12–20
+  const baseMeanIncome = 40 + Math.random() * 30;     // $40k–$70k
+  const baseIncomeSigma = 18 + Math.random() * 14;    // 18–32
 
   for (let i = 0; i < POP_SIZE; i++) {
-    const age = Math.max(18, Math.min(85, Math.round(randNorm(45, 16))));
+    const age = Math.max(18, Math.min(85, Math.round(randNorm(baseMeanAge, baseAgeSigma))));
     // Income correlated with age somewhat
-    const income = Math.max(15, Math.min(200, Math.round(randNorm(55 + (age - 45) * 0.3, 25))));
+    const income = Math.max(15, Math.min(200, Math.round(randNorm(baseMeanIncome + (age - baseMeanAge) * 0.3, baseIncomeSigma))));
     // Support probability slightly varies by age and income
-    const ageFactor = (age - 45) * 0.003;  // older slightly more opposed
-    const incomeFactor = (income - 55) * 0.002; // richer slightly more supportive
+    const ageFactor = (age - baseMeanAge) * 0.003;
+    const incomeFactor = (income - baseMeanIncome) * 0.002;
     const supportProb = Math.max(0.05, Math.min(0.95, baseSupportRate + ageFactor * -1 + incomeFactor));
     const support = Math.random() < supportProb;
 
