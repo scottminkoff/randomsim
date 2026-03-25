@@ -772,58 +772,61 @@ function render() {
   // --- Right column: sample results + charts + scatter ---
   let rightCol = '';
 
-  if (stats) {
-    const supportCovers = Math.abs(supportError) <= stats.moePct;
-    const ageCovers = Math.abs(ageError) <= stats.moeAge;
-    const incomeCovers = Math.abs(incomeError) <= stats.moeIncome;
+  const hasStats = !!stats;
+  let supportCovers, ageCovers, incomeCovers;
+  let supportLo, supportHi, ageLo, ageHi, incomeLo, incomeHi;
 
-    const supportLo = (stats.support - stats.moePct).toFixed(1);
-    const supportHi = (stats.support + stats.moePct).toFixed(1);
-    const ageLo = (stats.meanAge - stats.moeAge).toFixed(1);
-    const ageHi = (stats.meanAge + stats.moeAge).toFixed(1);
-    const incomeLo = (stats.meanIncome - stats.moeIncome).toFixed(1);
-    const incomeHi = (stats.meanIncome + stats.moeIncome).toFixed(1);
-
-    rightCol += `
-      <div class="sample-result random-sample" id="sampleResult">
-        <h3>Random Sample Results (n = ${stats.n})</h3>
-        <table class="sample-table">
-          <thead>
-            <tr>
-              <th>Measure</th>
-              <th data-tip="The actual population parameter — what we'd find if we measured every person. In real research this is unknown.">True Value</th>
-              <th data-tip="The statistic from our random sample. It approximates the true value but varies from sample to sample.">Sample Estimate</th>
-              <th data-tip="The 95% confidence interval. If we repeated sampling many times, about 95% of intervals would contain the true value.">95% CI</th>
-              <th data-tip="Whether this confidence interval contains the true value. Over many samples, roughly 95% should read 'Captured.'"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="row-label">Policy Support</td>
-              <td class="val">${trueSupport.toFixed(1)}%</td>
-              <td class="val-sample">${stats.support.toFixed(1)}%</td>
-              <td class="ci-range">${supportLo}% to ${supportHi}%</td>
-              <td><span class="ci-badge ${supportCovers ? 'ci-hit' : 'ci-miss'}">${supportCovers ? 'Captured' : 'Missed'}</span></td>
-            </tr>
-            <tr>
-              <td class="row-label">Mean Age</td>
-              <td class="val">${trueMeanAge.toFixed(1)} yrs</td>
-              <td class="val-sample">${stats.meanAge.toFixed(1)} yrs</td>
-              <td class="ci-range">${ageLo} to ${ageHi} yrs</td>
-              <td><span class="ci-badge ${ageCovers ? 'ci-hit' : 'ci-miss'}">${ageCovers ? 'Captured' : 'Missed'}</span></td>
-            </tr>
-            <tr>
-              <td class="row-label">Mean Income</td>
-              <td class="val">$${trueMeanIncome.toFixed(0)}k</td>
-              <td class="val-sample">$${stats.meanIncome.toFixed(0)}k</td>
-              <td class="ci-range">$${incomeLo}k to $${incomeHi}k</td>
-              <td><span class="ci-badge ${incomeCovers ? 'ci-hit' : 'ci-miss'}">${incomeCovers ? 'Captured' : 'Missed'}</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    `;
+  if (hasStats) {
+    supportCovers = Math.abs(supportError) <= stats.moePct;
+    ageCovers = Math.abs(ageError) <= stats.moeAge;
+    incomeCovers = Math.abs(incomeError) <= stats.moeIncome;
+    supportLo = (stats.support - stats.moePct).toFixed(1);
+    supportHi = (stats.support + stats.moePct).toFixed(1);
+    ageLo = (stats.meanAge - stats.moeAge).toFixed(1);
+    ageHi = (stats.meanAge + stats.moeAge).toFixed(1);
+    incomeLo = (stats.meanIncome - stats.moeIncome).toFixed(1);
+    incomeHi = (stats.meanIncome + stats.moeIncome).toFixed(1);
   }
+
+  rightCol += `
+    <div class="sample-result random-sample" id="sampleResult">
+      <h3>${hasStats ? `Random Sample Results (n = ${stats.n})` : 'Random Sample Results'}</h3>
+      <table class="sample-table">
+        <thead>
+          <tr>
+            <th>Measure</th>
+            <th data-tip="The actual population parameter — what we'd find if we measured every person. In real research this is unknown.">True Value</th>
+            <th data-tip="The statistic from our random sample. It approximates the true value but varies from sample to sample.">Sample Estimate</th>
+            <th data-tip="The 95% confidence interval. If we repeated sampling many times, about 95% of intervals would contain the true value.">95% CI</th>
+            <th data-tip="Whether this confidence interval contains the true value. Over many samples, roughly 95% should read 'Captured.'"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-label">Policy Support</td>
+            <td class="val">${trueSupport.toFixed(1)}%</td>
+            <td class="val-sample">${hasStats ? stats.support.toFixed(1) + '%' : '—'}</td>
+            <td class="ci-range">${hasStats ? supportLo + '% to ' + supportHi + '%' : '—'}</td>
+            <td>${hasStats ? `<span class="ci-badge ${supportCovers ? 'ci-hit' : 'ci-miss'}">${supportCovers ? 'Captured' : 'Missed'}</span>` : ''}</td>
+          </tr>
+          <tr>
+            <td class="row-label">Mean Age</td>
+            <td class="val">${trueMeanAge.toFixed(1)} yrs</td>
+            <td class="val-sample">${hasStats ? stats.meanAge.toFixed(1) + ' yrs' : '—'}</td>
+            <td class="ci-range">${hasStats ? ageLo + ' to ' + ageHi + ' yrs' : '—'}</td>
+            <td>${hasStats ? `<span class="ci-badge ${ageCovers ? 'ci-hit' : 'ci-miss'}">${ageCovers ? 'Captured' : 'Missed'}</span>` : ''}</td>
+          </tr>
+          <tr>
+            <td class="row-label">Mean Income</td>
+            <td class="val">$${trueMeanIncome.toFixed(0)}k</td>
+            <td class="val-sample">${hasStats ? '$' + stats.meanIncome.toFixed(0) + 'k' : '—'}</td>
+            <td class="ci-range">${hasStats ? '$' + incomeLo + 'k to $' + incomeHi + 'k' : '—'}</td>
+            <td>${hasStats ? `<span class="ci-badge ${incomeCovers ? 'ci-hit' : 'ci-miss'}">${incomeCovers ? 'Captured' : 'Missed'}</span>` : ''}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
 
   // Distribution comparison charts
   const sampleMembers = sampleIndices.map(i => population[i]);
