@@ -38,43 +38,47 @@ body {
 h1, h2, h3 { font-family: 'Source Serif 4', serif; }
 
 .container {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 0.5rem 1rem 1rem;
 }
 
-header {
-  text-align: center;
-  margin-bottom: 2.5rem;
-  padding-bottom: 1.5rem;
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.75rem;
+  background: var(--card-bg);
   border-bottom: 2px solid var(--border);
+  flex-wrap: wrap;
 }
 
-header h1 {
-  font-size: 2rem;
+.toolbar h1 {
+  font-size: 1.1rem;
   color: var(--navy);
-  margin-bottom: 0.5rem;
   font-weight: 700;
-}
-
-header p {
-  color: var(--text-light);
-  font-size: 0.95rem;
-  max-width: 680px;
-  margin: 0 auto;
+  white-space: nowrap;
 }
 
 .controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 2rem;
-  padding: 1.25rem;
-  background: var(--card-bg);
-  border-radius: 10px;
-  border: 1px solid var(--border);
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) 2fr;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.col-left, .col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .control-group {
@@ -123,34 +127,27 @@ header p {
 .btn-accent:hover { background: var(--purple-light); }
 
 .explainer {
-  background: var(--card-bg);
-  border-left: 3px solid var(--teal);
-  padding: 0.75rem 1rem;
-  margin-bottom: 1.5rem;
-  border-radius: 0 8px 8px 0;
-  font-size: 0.88rem;
-  color: var(--text-light);
+  display: none;
 }
 
 /* Population overview */
 .pop-overview {
   background: var(--card-bg);
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid var(--border);
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
   border-top: 3px solid var(--navy);
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .pop-overview.visible { opacity: 1; transform: translateY(0); }
 
 .pop-overview h3 {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: var(--navy);
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .pop-stats {
@@ -174,7 +171,7 @@ header p {
 }
 
 .pop-stat .value {
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--navy);
 }
@@ -182,13 +179,12 @@ header p {
 /* Sample result */
 .sample-result {
   background: var(--card-bg);
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid var(--border);
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.4s ease 0.1s, transform 0.4s ease 0.1s;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
 }
 
 .sample-result.visible { opacity: 1; transform: translateY(0); }
@@ -249,40 +245,45 @@ header p {
 .ci-hit { background: #e8f5e9; color: var(--green); }
 .ci-miss { background: #fdecea; color: var(--red); }
 
-.sample-definitions {
-  border-top: 1px solid var(--border);
-  padding-top: 0.75rem;
-  margin-top: 0.25rem;
+.sample-definitions { display: none; }
+
+/* Tooltip on table headers */
+.sample-table th[data-tip] {
+  position: relative;
+  cursor: help;
+  text-decoration: underline dotted var(--text-light);
+  text-underline-offset: 2px;
 }
 
-.sample-definitions dl {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.25rem 0.75rem;
-  font-size: 0.78rem;
-  margin: 0;
-}
-
-.sample-definitions dt {
-  font-weight: 600;
-  color: var(--navy);
-}
-
-.sample-definitions dd {
-  color: var(--text-light);
-  margin: 0;
+.sample-table th[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 10;
+  background: var(--navy);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  width: 220px;
+  white-space: normal;
+  line-height: 1.4;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 /* Sampling distribution */
 .sampling-dist {
   background: var(--card-bg);
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid var(--border);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 0.75rem;
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.4s ease 0.2s, transform 0.4s ease 0.2s;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease 0.2s, transform 0.3s ease 0.2s;
 }
 
 .sampling-dist.visible { opacity: 1; transform: translateY(0); }
@@ -382,8 +383,7 @@ header p {
 .histograms-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.5rem;
 }
 
 .histograms-row .sampling-dist {
@@ -391,8 +391,8 @@ header p {
 }
 
 .histograms-row .histogram {
-  height: 140px;
-  margin: 0 20px 1rem;
+  height: 110px;
+  margin: 0 16px 0.5rem;
 }
 
 .histograms-row .hist-axis {
@@ -402,6 +402,12 @@ header p {
 .histograms-row .dist-stats {
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
+}
+
+@media (max-width: 1100px) {
+  .two-col {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {
@@ -421,13 +427,12 @@ header p {
 /* People grid */
 .people-grid-section {
   background: var(--card-bg);
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid var(--border);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 0.75rem;
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.4s ease 0.05s, transform 0.4s ease 0.05s;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease 0.05s, transform 0.3s ease 0.05s;
 }
 
 .people-grid-section.visible { opacity: 1; transform: translateY(0); }
@@ -515,13 +520,12 @@ header p {
 /* Convergence scatter plots */
 .scatter-section {
   background: var(--card-bg);
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid var(--border);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 0.75rem;
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.4s ease 0.3s, transform 0.4s ease 0.3s;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease 0.3s, transform 0.3s ease 0.3s;
 }
 
 .scatter-section.visible { opacity: 1; transform: translateY(0); }
@@ -543,7 +547,7 @@ header p {
 .scatter-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .scatter-card {
@@ -559,7 +563,7 @@ header p {
 
 .scatter-card canvas {
   width: 100%;
-  height: 200px;
+  height: 160px;
   display: block;
 }
 
@@ -576,23 +580,17 @@ header p {
 }
 
 @media (max-width: 700px) {
+  .toolbar { flex-direction: column; gap: 0.5rem; }
   .controls { flex-direction: column; }
-  header h1 { font-size: 1.5rem; }
   .pop-stats { grid-template-columns: 1fr 1fr; }
   .sample-table { font-size: 0.78rem; }
   .sample-table th, .sample-table td { padding: 0.4rem 0.35rem; }
-  .sample-definitions dl { grid-template-columns: 1fr; gap: 0.15rem; }
-  .sample-definitions dt { margin-top: 0.4rem; }
 }
 </style>
 </head>
 <body>
-<div class="container">
-  <header>
-    <h1>The Power of Random Sampling</h1>
-    <p>How can a sample of just a few hundred people tell us what millions think? This simulation shows why random sampling works.</p>
-  </header>
-
+<div class="toolbar">
+  <h1>The Power of Random Sampling</h1>
   <div class="controls">
     <div class="control-group">
       <label for="popSlider">Population (N):</label>
@@ -607,11 +605,8 @@ header p {
     <button class="btn btn-primary" onclick="drawSample()">Draw Sample</button>
     <button class="btn btn-secondary" onclick="newPopulation()">New Population</button>
   </div>
-
-  <div class="explainer" id="explainerText">
-    <strong>Random sampling</strong> gives every member of the population an equal chance of being selected. Even small random samples tend to mirror the population well — that's the power behind polls and surveys.
-  </div>
-
+</div>
+<div class="container">
   <div id="resultsArea"></div>
 </div>
 
@@ -716,8 +711,10 @@ function render() {
 
   let html = '';
 
-  // Population overview
-  html += `
+  // --- Left column: population stats + people grid ---
+  let leftCol = '';
+
+  leftCol += `
     <div class="pop-overview" id="popOverview">
       <h3>Population Truth (N = ${POP_SIZE.toLocaleString()})</h3>
       <div class="pop-stats">
@@ -737,13 +734,12 @@ function render() {
     </div>
   `;
 
-  // People grid — show up to 2500 of population
   const gridSize = Math.min(10000, POP_SIZE);
   const sampleSet = new Set(sampleIndices);
-  html += `
+  leftCol += `
     <div class="people-grid-section" id="peopleGrid">
       <h3>Population & Sample</h3>
-      <div class="subtitle">Each square is one person${gridSize < POP_SIZE ? ` (showing ${gridSize.toLocaleString()} of ${POP_SIZE.toLocaleString()})` : ` (${POP_SIZE.toLocaleString()} total)`}. ${sampleIndices.length ? `Highlighted = sampled.` : 'Click "Draw Sample" to begin.'}</div>
+      <div class="subtitle">Each square = one person${gridSize < POP_SIZE ? ` (${gridSize.toLocaleString()} of ${POP_SIZE.toLocaleString()})` : ''}. ${sampleIndices.length ? 'Highlighted = sampled.' : 'Click "Draw Sample" to begin.'}</div>
       <div class="people-grid">
         ${population.slice(0, gridSize).map((p, i) => {
           const sampled = sampleSet.has(i);
@@ -759,7 +755,9 @@ function render() {
     </div>
   `;
 
-  // Current sample result
+  // --- Right column: sample results + charts + scatter ---
+  let rightCol = '';
+
   if (stats) {
     const supportCovers = Math.abs(supportError) <= stats.moePct;
     const ageCovers = Math.abs(ageError) <= stats.moeAge;
@@ -772,17 +770,17 @@ function render() {
     const incomeLo = (stats.meanIncome - stats.moeIncome).toFixed(1);
     const incomeHi = (stats.meanIncome + stats.moeIncome).toFixed(1);
 
-    html += `
+    rightCol += `
       <div class="sample-result random-sample" id="sampleResult">
         <h3>Random Sample Results (n = ${stats.n})</h3>
         <table class="sample-table">
           <thead>
             <tr>
               <th>Measure</th>
-              <th>True Value</th>
-              <th>Sample Estimate</th>
-              <th>95% CI</th>
-              <th></th>
+              <th data-tip="The actual population parameter — what we'd find if we measured every person. In real research this is unknown.">True Value</th>
+              <th data-tip="The statistic from our random sample. It approximates the true value but varies from sample to sample.">Sample Estimate</th>
+              <th data-tip="The 95% confidence interval. If we repeated sampling many times, about 95% of intervals would contain the true value.">95% CI</th>
+              <th data-tip="Whether this confidence interval contains the true value. Over many samples, roughly 95% should read 'Captured.'"></th>
             </tr>
           </thead>
           <tbody>
@@ -809,35 +807,23 @@ function render() {
             </tr>
           </tbody>
         </table>
-        <div class="sample-definitions">
-          <dl>
-            <dt>True Value</dt>
-            <dd>The actual population parameter &mdash; what we would find if we measured every person. In real research this is unknown; here we can see it because we created the population.</dd>
-            <dt>Sample Estimate</dt>
-            <dd>The statistic calculated from our random sample. It approximates the true value but varies from sample to sample due to random chance.</dd>
-            <dt>95% CI</dt>
-            <dd>The 95% confidence interval is the range within which we expect the true value to fall. If we repeated this sampling process many times, about 95% of the intervals would contain the true value.</dd>
-            <dt>Captured / Missed</dt>
-            <dd>Whether this particular confidence interval contains the true population value. Over many samples, roughly 95% should read "Captured."</dd>
-          </dl>
-        </div>
       </div>
     `;
   }
 
   // Distribution comparison charts
   const sampleMembers = sampleIndices.map(i => population[i]);
-  html += `<div class="histograms-row">`;
-  html += buildDistChart('support', 'Policy Support', population.map(p => p.support ? 1 : 0), sampleMembers.map(p => p.support ? 1 : 0), 'var(--teal)', true, stats ? stats.moePct : null);
-  html += buildDistChart('age', 'Age Distribution', population.map(p => p.age), sampleMembers.map(p => p.age), 'var(--purple)', false, stats ? stats.moeAge : null);
-  html += buildDistChart('income', 'Income Distribution ($k)', population.map(p => p.income), sampleMembers.map(p => p.income), 'var(--amber)', false, stats ? stats.moeIncome : null);
-  html += `</div>`;
+  rightCol += `<div class="histograms-row">`;
+  rightCol += buildDistChart('support', 'Policy Support', population.map(p => p.support ? 1 : 0), sampleMembers.map(p => p.support ? 1 : 0), 'var(--teal)', true, stats ? stats.moePct : null);
+  rightCol += buildDistChart('age', 'Age Distribution', population.map(p => p.age), sampleMembers.map(p => p.age), 'var(--purple)', false, stats ? stats.moeAge : null);
+  rightCol += buildDistChart('income', 'Income Distribution ($k)', population.map(p => p.income), sampleMembers.map(p => p.income), 'var(--amber)', false, stats ? stats.moeIncome : null);
+  rightCol += `</div>`;
 
   // Convergence scatter plots
-  html += `
+  rightCol += `
     <div class="scatter-section" id="scatterSection">
       <h3>Estimate Convergence</h3>
-      <div class="subtitle">Each dot is one sample draw. The dashed line marks the true population value. Draw multiple samples to see estimates converge.</div>
+      <div class="subtitle">Each dot is one sample draw. The dashed line marks the true value. Draw multiple samples to see estimates converge.</div>
       <div class="scatter-row">
         <div class="scatter-card">
           <div class="scatter-title">Policy Support</div>
@@ -856,8 +842,11 @@ function render() {
     </div>
   `;
 
-  // Pedagogy note
-  html += `<p class="pedagogy-note" id="pedNote">${getPedNote()}</p>`;
+  // Assemble two-column layout
+  html += `<div class="two-col">`;
+  html += `<div class="col-left">${leftCol}</div>`;
+  html += `<div class="col-right">${rightCol}</div>`;
+  html += `</div>`;
 
   area.innerHTML = html;
 
