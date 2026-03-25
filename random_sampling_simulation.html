@@ -226,6 +226,32 @@ header p {
 .est-error.medium { background: #fff8e1; color: #f57f17; }
 .est-error.large { background: #fdecea; color: var(--red); }
 
+.est-moe {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--navy);
+  background: #eef2f7;
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+}
+
+.ci-badge {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.ci-hit { background: #e8f5e9; color: var(--green); }
+.ci-miss { background: #fdecea; color: var(--red); }
+
+.moe-note {
+  font-size: 0.78rem;
+  color: var(--text-light);
+  margin-bottom: 0.5rem;
+  font-style: italic;
+}
+
 /* Sampling distribution */
 .sampling-dist {
   background: var(--card-bg);
@@ -537,10 +563,23 @@ function drawRandomSample(n) {
 
 function computeSampleStats(indices) {
   const members = indices.map(i => population[i]);
-  const support = members.filter(p => p.support).length / members.length * 100;
-  const meanAge = members.reduce((s, p) => s + p.age, 0) / members.length;
-  const meanIncome = members.reduce((s, p) => s + p.income, 0) / members.length;
-  return { support, meanAge, meanIncome, n: members.length };
+  const n = members.length;
+  const support = members.filter(p => p.support).length / n * 100;
+  const meanAge = members.reduce((s, p) => s + p.age, 0) / n;
+  const meanIncome = members.reduce((s, p) => s + p.income, 0) / n;
+
+  // Margin of error at 95% confidence (z = 1.96)
+  const z = 1.96;
+  // Proportion MOE: z * sqrt(p*(1-p)/n)
+  const pHat = support / 100;
+  const moePct = z * Math.sqrt(pHat * (1 - pHat) / n) * 100;
+  // Mean MOEs: z * (s / sqrt(n))
+  const sdAge = Math.sqrt(members.reduce((s, p) => s + (p.age - meanAge) ** 2, 0) / (n - 1));
+  const moeAge = z * sdAge / Math.sqrt(n);
+  const sdIncome = Math.sqrt(members.reduce((s, p) => s + (p.income - meanIncome) ** 2, 0) / (n - 1));
+  const moeIncome = z * sdIncome / Math.sqrt(n);
+
+  return { support, meanAge, meanIncome, n, moePct, moeAge, moeIncome };
 }
 
 function errorClass(error, thresholds) {
@@ -611,34 +650,45 @@ function render() {
 
   // Current sample result
   if (stats) {
+    const supportCovers = Math.abs(supportError) <= stats.moePct;
+    const ageCovers = Math.abs(ageError) <= stats.moeAge;
+    const incomeCovers = Math.abs(incomeError) <= stats.moeIncome;
+
     html += `
       <div class="sample-result random-sample" id="sampleResult">
         <h3>Random Sample (n = ${stats.n})</h3>
+        <div class="moe-note">95% Confidence Interval: sample estimate &pm; margin of error</div>
         <div class="est-row">
           <span class="est-label">Policy Support</span>
           <span class="est-value">
             ${stats.support.toFixed(1)}%
+            <span class="est-moe">&pm;${stats.moePct.toFixed(1)} pp</span>
             <span class="est-error ${errorClass(supportError, [3, 8])}">
               error: ${supportError > 0 ? '+' : ''}${supportError.toFixed(1)} pp
             </span>
+            <span class="ci-badge ${supportCovers ? 'ci-hit' : 'ci-miss'}">${supportCovers ? 'CI captures truth' : 'CI misses'}</span>
           </span>
         </div>
         <div class="est-row">
           <span class="est-label">Mean Age</span>
           <span class="est-value">
             ${stats.meanAge.toFixed(1)}
+            <span class="est-moe">&pm;${stats.moeAge.toFixed(1)} yrs</span>
             <span class="est-error ${errorClass(ageError, [2, 5])}">
               error: ${ageError > 0 ? '+' : ''}${ageError.toFixed(1)} yrs
             </span>
+            <span class="ci-badge ${ageCovers ? 'ci-hit' : 'ci-miss'}">${ageCovers ? 'CI captures truth' : 'CI misses'}</span>
           </span>
         </div>
         <div class="est-row">
           <span class="est-label">Mean Income</span>
           <span class="est-value">
             $${stats.meanIncome.toFixed(0)}k
+            <span class="est-moe">&pm;$${stats.moeIncome.toFixed(1)}k</span>
             <span class="est-error ${errorClass(incomeError, [3, 7])}">
               error: ${incomeError > 0 ? '+' : ''}${incomeError.toFixed(1)}k
             </span>
+            <span class="ci-badge ${incomeCovers ? 'ci-hit' : 'ci-miss'}">${incomeCovers ? 'CI captures truth' : 'CI misses'}</span>
           </span>
         </div>
       </div>
@@ -648,9 +698,9 @@ function render() {
   // Distribution comparison charts
   const sampleMembers = sampleIndices.map(i => population[i]);
   html += `<div class="histograms-row">`;
-  html += buildDistChart('support', 'Policy Support', population.map(p => p.support ? 1 : 0), sampleMembers.map(p => p.support ? 1 : 0), 'var(--teal)', true);
-  html += buildDistChart('age', 'Age Distribution', population.map(p => p.age), sampleMembers.map(p => p.age), 'var(--purple)', false);
-  html += buildDistChart('income', 'Income Distribution ($k)', population.map(p => p.income), sampleMembers.map(p => p.income), 'var(--amber)', false);
+  html += buildDistChart('support', 'Policy Support', population.map(p => p.support ? 1 : 0), sampleMembers.map(p => p.support ? 1 : 0), 'var(--teal)', true, stats ? stats.moePct : null);
+  html += buildDistChart('age', 'Age Distribution', population.map(p => p.age), sampleMembers.map(p => p.age), 'var(--purple)', false, stats ? stats.moeAge : null);
+  html += buildDistChart('income', 'Income Distribution ($k)', population.map(p => p.income), sampleMembers.map(p => p.income), 'var(--amber)', false, stats ? stats.moeIncome : null);
   html += `</div>`;
 
   // Pedagogy note
@@ -667,7 +717,7 @@ function render() {
   });
 }
 
-function buildDistChart(key, title, popVals, sampleVals, color, isBinary) {
+function buildDistChart(key, title, popVals, sampleVals, color, isBinary, moe) {
   const hasSample = sampleVals.length > 0;
 
   if (isBinary) {
@@ -698,6 +748,7 @@ function buildDistChart(key, title, popVals, sampleVals, color, isBinary) {
     statsHtml += `<div class="stat-item"><div class="stat-label">Population</div><div class="stat-val">${popPct.toFixed(1)}%</div></div>`;
     if (hasSample) {
       statsHtml += `<div class="stat-item"><div class="stat-label">Sample</div><div class="stat-val" style="color:${color}">${samPct.toFixed(1)}%</div></div>`;
+      statsHtml += `<div class="stat-item"><div class="stat-label">MOE</div><div class="stat-val">&pm;${moe !== null ? moe.toFixed(1) : '?'} pp</div></div>`;
       statsHtml += `<div class="stat-item"><div class="stat-label">Error</div><div class="stat-val"><span class="est-error ${errorClass(error, [3, 8])}">${error > 0 ? '+' : ''}${error.toFixed(1)} pp</span></div></div>`;
     }
     statsHtml += `</div>`;
@@ -769,6 +820,8 @@ function buildDistChart(key, title, popVals, sampleVals, color, isBinary) {
   statsHtml += `<div class="stat-item"><div class="stat-label">Pop. Mean</div><div class="stat-val">${fmt(popMean)}</div></div>`;
   if (hasSample) {
     statsHtml += `<div class="stat-item"><div class="stat-label">Sample Mean</div><div class="stat-val" style="color:${color}">${fmt(samMean)}</div></div>`;
+    const moeStr = isIncome ? `&pm;$${moe !== null ? moe.toFixed(1) : '?'}k` : `&pm;${moe !== null ? moe.toFixed(1) : '?'}${errUnit}`;
+    statsHtml += `<div class="stat-item"><div class="stat-label">MOE</div><div class="stat-val">${moeStr}</div></div>`;
     statsHtml += `<div class="stat-item"><div class="stat-label">Error</div><div class="stat-val"><span class="est-error ${errorClass(error, errThresh)}">${error > 0 ? '+' : ''}${error.toFixed(1)}${errUnit}</span></div></div>`;
   }
   statsHtml += `</div>`;
