@@ -38,43 +38,57 @@ body {
 h1, h2, h3 { font-family: 'Source Serif 4', serif; }
 
 .container {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 0.5rem 1rem 1rem;
 }
 
-header {
-  text-align: center;
-  margin-bottom: 2.5rem;
-  padding-bottom: 1.5rem;
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.75rem;
+  background: var(--card-bg);
   border-bottom: 2px solid var(--border);
+  flex-wrap: wrap;
 }
 
-header h1 {
-  font-size: 2rem;
+.toolbar h1 {
+  font-size: 1.1rem;
   color: var(--navy);
-  margin-bottom: 0.5rem;
   font-weight: 700;
-}
-
-header p {
-  color: var(--text-light);
-  font-size: 0.95rem;
-  max-width: 680px;
-  margin: 0 auto;
+  white-space: nowrap;
 }
 
 .controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 2rem;
-  padding: 1.25rem;
-  background: var(--card-bg);
-  border-radius: 10px;
-  border: 1px solid var(--border);
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) 2fr;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.col-left, .col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.col-left .people-grid-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.col-left .people-grid {
+  flex: 1;
 }
 
 .control-group {
@@ -123,34 +137,27 @@ header p {
 .btn-accent:hover { background: var(--purple-light); }
 
 .explainer {
-  background: var(--card-bg);
-  border-left: 3px solid var(--teal);
-  padding: 0.75rem 1rem;
-  margin-bottom: 1.5rem;
-  border-radius: 0 8px 8px 0;
-  font-size: 0.88rem;
-  color: var(--text-light);
+  display: none;
 }
 
 /* Population overview */
 .pop-overview {
   background: var(--card-bg);
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid var(--border);
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
   border-top: 3px solid var(--navy);
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .pop-overview.visible { opacity: 1; transform: translateY(0); }
 
 .pop-overview h3 {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: var(--navy);
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .pop-stats {
@@ -174,7 +181,7 @@ header p {
 }
 
 .pop-stat .value {
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--navy);
 }
@@ -182,60 +189,111 @@ header p {
 /* Sample result */
 .sample-result {
   background: var(--card-bg);
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid var(--border);
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.4s ease 0.1s, transform 0.4s ease 0.1s;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
 }
 
 .sample-result.visible { opacity: 1; transform: translateY(0); }
-.sample-result.random-sample { border-top: 3px solid var(--teal); }
+.sample-result.random-sample { border-top: 3px solid var(--navy); }
 
 .sample-result h3 { font-size: 1rem; margin-bottom: 0.75rem; }
 .sample-result.random-sample h3 { color: var(--teal); }
 
-.est-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.45rem 0;
-  border-bottom: 1px solid var(--bg);
-  font-size: 0.9rem;
+.sample-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
 }
 
-.est-label { color: var(--text-light); }
-
-.est-value {
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.est-error {
+.sample-table th {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
   font-size: 0.75rem;
-  padding: 0.1rem 0.5rem;
-  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-light);
+  border-bottom: 2px solid var(--border);
+}
+
+.sample-table td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--bg);
+}
+
+.sample-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.sample-table .row-label {
+  color: var(--text-light);
   font-weight: 500;
 }
 
-.est-error.small { background: #e8f5e9; color: var(--green); }
-.est-error.medium { background: #fff8e1; color: #f57f17; }
-.est-error.large { background: #fdecea; color: var(--red); }
+.sample-table .val { font-weight: 600; color: var(--navy); }
+.sample-table .val-sample { font-weight: 600; color: var(--navy); }
+
+.sample-table .ci-range {
+  font-weight: 500;
+  color: var(--navy);
+  font-size: 0.82rem;
+}
+
+.ci-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.ci-hit { background: #e8f5e9; color: var(--green); }
+.ci-miss { background: #fdecea; color: var(--red); }
+
+.sample-definitions { display: none; }
+
+/* Tooltip on table headers */
+.sample-table th[data-tip] {
+  position: relative;
+  cursor: help;
+  text-decoration: underline dotted var(--text-light);
+  text-underline-offset: 2px;
+}
+
+.sample-table th[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 10;
+  background: var(--navy);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  width: 220px;
+  white-space: normal;
+  line-height: 1.4;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
 
 /* Sampling distribution */
 .sampling-dist {
   background: var(--card-bg);
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid var(--border);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 0.75rem;
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.4s ease 0.2s, transform 0.4s ease 0.2s;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease 0.2s, transform 0.3s ease 0.2s;
 }
 
 .sampling-dist.visible { opacity: 1; transform: translateY(0); }
@@ -335,8 +393,7 @@ header p {
 .histograms-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.5rem;
 }
 
 .histograms-row .sampling-dist {
@@ -344,8 +401,8 @@ header p {
 }
 
 .histograms-row .histogram {
-  height: 140px;
-  margin: 0 20px 1rem;
+  height: 110px;
+  margin: 0 16px 0.5rem;
 }
 
 .histograms-row .hist-axis {
@@ -355,6 +412,12 @@ header p {
 .histograms-row .dist-stats {
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
+}
+
+@media (max-width: 1100px) {
+  .two-col {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {
@@ -374,13 +437,12 @@ header p {
 /* People grid */
 .people-grid-section {
   background: var(--card-bg);
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid var(--border);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 0.75rem;
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.4s ease 0.05s, transform 0.4s ease 0.05s;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease 0.05s, transform 0.3s ease 0.05s;
 }
 
 .people-grid-section.visible { opacity: 1; transform: translateY(0); }
@@ -402,21 +464,22 @@ header p {
 .people-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 1px;
+  gap: 0.5px;
   justify-content: center;
   max-width: 100%;
   margin: 0 auto;
 }
 
 .person-dot {
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
   border-radius: 1px;
   transition: opacity 0.2s ease;
 }
 
-.person-dot.support { background: var(--teal); }
-.person-dot.oppose { background: var(--amber); }
+.person-dot.dem { background: #2a7de1; }
+.person-dot.rep { background: #e04040; }
+.person-dot.ind { background: #FFCE52; }
 .person-dot.sampled { opacity: 1; box-shadow: 0 0 0 1px var(--navy); }
 .person-dot.not-sampled { opacity: 0.15; }
 
@@ -442,23 +505,104 @@ header p {
   border-radius: 2px;
 }
 
-.grid-legend .swatch.sup { background: var(--teal); }
-.grid-legend .swatch.opp { background: var(--amber); }
+.grid-legend .swatch.dem { background: #2a7de1; }
+.grid-legend .swatch.rep { background: #e04040; }
+.grid-legend .swatch.ind { background: #FFCE52; }
+
+/* Error magnitude coloring */
+.est-error.small { color: var(--green); }
+.est-error.medium { color: var(--amber); }
+.est-error.large { color: var(--red); }
+
+/* Conv legend */
+.conv-legend {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: var(--text-light);
+}
+
+.conv-legend span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Convergence scatter plots */
+.scatter-section {
+  background: var(--card-bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  padding: 0.75rem;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease 0.3s, transform 0.3s ease 0.3s;
+}
+
+.scatter-section.visible { opacity: 1; transform: translateY(0); }
+
+.scatter-section h3 {
+  font-size: 1rem;
+  color: var(--navy);
+  margin-bottom: 0.25rem;
+  text-align: center;
+}
+
+.scatter-section .subtitle {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.scatter-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.scatter-card {
+  text-align: center;
+}
+
+.scatter-card .scatter-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+}
+
+.scatter-card canvas {
+  width: 100%;
+  height: 160px;
+  display: block;
+}
+
+.scatter-count {
+  font-size: 0.78rem;
+  color: var(--text-light);
+  text-align: center;
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .scatter-row { grid-template-columns: 1fr; }
+  .scatter-card canvas { height: 180px; }
+}
 
 @media (max-width: 700px) {
+  .toolbar { flex-direction: column; gap: 0.5rem; }
   .controls { flex-direction: column; }
-  header h1 { font-size: 1.5rem; }
   .pop-stats { grid-template-columns: 1fr 1fr; }
+  .sample-table { font-size: 0.78rem; }
+  .sample-table th, .sample-table td { padding: 0.4rem 0.35rem; }
 }
 </style>
 </head>
 <body>
-<div class="container">
-  <header>
-    <h1>The Power of Random Sampling</h1>
-    <p>How can a sample of just a few hundred people tell us what millions think? This simulation shows why random sampling works.</p>
-  </header>
-
+<div class="toolbar">
+  <h1>The Power of Random Sampling</h1>
   <div class="controls">
     <div class="control-group">
       <label for="popSlider">Population (N):</label>
@@ -473,11 +617,8 @@ header p {
     <button class="btn btn-primary" onclick="drawSample()">Draw Sample</button>
     <button class="btn btn-secondary" onclick="newPopulation()">New Population</button>
   </div>
-
-  <div class="explainer" id="explainerText">
-    <strong>Random sampling</strong> gives every member of the population an equal chance of being selected. Even small random samples tend to mirror the population well — that's the power behind polls and surveys.
-  </div>
-
+</div>
+<div class="container">
   <div id="resultsArea"></div>
 </div>
 
@@ -486,9 +627,12 @@ let POP_SIZE = 10000;
 let population = [];
 let sampleIndices = [];
 let sampleN = 50;
+let drawHistory = []; // {n, dem, rep, ind, meanAge, meanIncome}
 
 // Population parameters (set when generating)
-let trueSupport = 0;
+let trueDem = 0;
+let trueRep = 0;
+let trueInd = 0;
 let trueMeanAge = 0;
 let trueMeanIncome = 0;
 
@@ -500,24 +644,41 @@ function randNorm(mu, sigma) {
 
 function generatePopulation() {
   population = [];
-  // Support rate between 35-65%
-  const baseSupportRate = 0.35 + Math.random() * 0.30;
+  // Randomize population parameters each time
+  const baseDemRate = 0.30 + Math.random() * 0.05;    // 30–35%
+  const baseRepRate = 0.30 + Math.random() * 0.05;    // 30–35%
+  // Remainder is Independent
+  const baseMeanAge = 38 + Math.random() * 14;        // 38–52
+  const baseAgeSigma = 12 + Math.random() * 8;        // 12–20
+  const baseMeanIncome = 40 + Math.random() * 30;     // $40k–$70k
+  const baseIncomeSigma = 18 + Math.random() * 14;    // 18–32
 
   for (let i = 0; i < POP_SIZE; i++) {
-    const age = Math.max(18, Math.min(85, Math.round(randNorm(45, 16))));
-    // Income correlated with age somewhat
-    const income = Math.max(15, Math.min(200, Math.round(randNorm(55 + (age - 45) * 0.3, 25))));
-    // Support probability slightly varies by age and income
-    const ageFactor = (age - 45) * 0.003;  // older slightly more opposed
-    const incomeFactor = (income - 55) * 0.002; // richer slightly more supportive
-    const supportProb = Math.max(0.05, Math.min(0.95, baseSupportRate + ageFactor * -1 + incomeFactor));
-    const support = Math.random() < supportProb;
+    const age = Math.max(18, Math.min(85, Math.round(randNorm(baseMeanAge, baseAgeSigma))));
+    const income = Math.max(15, Math.min(200, Math.round(randNorm(baseMeanIncome + (age - baseMeanAge) * 0.3, baseIncomeSigma))));
+    // Party ID with slight demographic variation
+    const ageFactor = (age - baseMeanAge) * 0.002;
+    const incomeFactor = (income - baseMeanIncome) * 0.001;
+    const demProb = Math.max(0.05, Math.min(0.60, baseDemRate - ageFactor + incomeFactor * -1));
+    const repProb = Math.max(0.05, Math.min(0.60, baseRepRate + ageFactor + incomeFactor));
+    const total = demProb + repProb;
+    const normDem = demProb / Math.max(total, 0.01);
+    const normRep = repProb / Math.max(total, 0.01);
+    // Scale so dem+rep leaves room for independents
+    const partyScale = Math.min(1, (demProb + repProb) / (baseDemRate + baseRepRate));
+    const r = Math.random();
+    let party;
+    if (r < demProb) party = 'dem';
+    else if (r < demProb + repProb) party = 'rep';
+    else party = 'ind';
 
-    population.push({ age, income, support, idx: i });
+    population.push({ age, income, party, idx: i });
   }
 
   // Compute true values
-  trueSupport = population.filter(p => p.support).length / POP_SIZE * 100;
+  trueDem = population.filter(p => p.party === 'dem').length / POP_SIZE * 100;
+  trueRep = population.filter(p => p.party === 'rep').length / POP_SIZE * 100;
+  trueInd = population.filter(p => p.party === 'ind').length / POP_SIZE * 100;
   trueMeanAge = population.reduce((s, p) => s + p.age, 0) / POP_SIZE;
   trueMeanIncome = population.reduce((s, p) => s + p.income, 0) / POP_SIZE;
 
@@ -537,10 +698,29 @@ function drawRandomSample(n) {
 
 function computeSampleStats(indices) {
   const members = indices.map(i => population[i]);
-  const support = members.filter(p => p.support).length / members.length * 100;
-  const meanAge = members.reduce((s, p) => s + p.age, 0) / members.length;
-  const meanIncome = members.reduce((s, p) => s + p.income, 0) / members.length;
-  return { support, meanAge, meanIncome, n: members.length };
+  const n = members.length;
+  const dem = members.filter(p => p.party === 'dem').length / n * 100;
+  const rep = members.filter(p => p.party === 'rep').length / n * 100;
+  const ind = members.filter(p => p.party === 'ind').length / n * 100;
+  const meanAge = members.reduce((s, p) => s + p.age, 0) / n;
+  const meanIncome = members.reduce((s, p) => s + p.income, 0) / n;
+
+  // Margin of error at 95% confidence (z = 1.96)
+  const z = 1.96;
+  // Proportion MOE: z * sqrt(p*(1-p)/n)
+  const pDem = dem / 100;
+  const moeDem = z * Math.sqrt(pDem * (1 - pDem) / n) * 100;
+  const pRep = rep / 100;
+  const moeRep = z * Math.sqrt(pRep * (1 - pRep) / n) * 100;
+  const pInd = ind / 100;
+  const moeInd = z * Math.sqrt(pInd * (1 - pInd) / n) * 100;
+  // Mean MOEs: z * (s / sqrt(n))
+  const sdAge = Math.sqrt(members.reduce((s, p) => s + (p.age - meanAge) ** 2, 0) / (n - 1));
+  const moeAge = z * sdAge / Math.sqrt(n);
+  const sdIncome = Math.sqrt(members.reduce((s, p) => s + (p.income - meanIncome) ** 2, 0) / (n - 1));
+  const moeIncome = z * sdIncome / Math.sqrt(n);
+
+  return { dem, rep, ind, meanAge, meanIncome, n, moeDem, moeRep, moeInd, moeAge, moeIncome };
 }
 
 function errorClass(error, thresholds) {
@@ -551,8 +731,10 @@ function errorClass(error, thresholds) {
 }
 
 function drawSample() {
-  sampleN = parseInt(document.getElementById('sampleSlider').value);
+  sampleN = Math.min(parseInt(document.getElementById('sampleSlider').value), POP_SIZE);
   sampleIndices = drawRandomSample(sampleN);
+  const stats = computeSampleStats(sampleIndices);
+  drawHistory.push({ n: stats.n, dem: stats.dem, rep: stats.rep, ind: stats.ind, meanAge: stats.meanAge, meanIncome: stats.meanIncome });
   render();
 }
 
@@ -560,20 +742,32 @@ function render() {
   const area = document.getElementById('resultsArea');
 
   const stats = sampleIndices.length ? computeSampleStats(sampleIndices) : null;
-  const supportError = stats ? stats.support - trueSupport : 0;
+  const demError = stats ? stats.dem - trueDem : 0;
+  const repError = stats ? stats.rep - trueRep : 0;
+  const indError = stats ? stats.ind - trueInd : 0;
   const ageError = stats ? stats.meanAge - trueMeanAge : 0;
   const incomeError = stats ? stats.meanIncome - trueMeanIncome : 0;
 
   let html = '';
 
-  // Population overview
-  html += `
+  // --- Left column: population stats + people grid ---
+  let leftCol = '';
+
+  leftCol += `
     <div class="pop-overview" id="popOverview">
       <h3>Population Truth (N = ${POP_SIZE.toLocaleString()})</h3>
       <div class="pop-stats">
         <div class="pop-stat">
-          <div class="label">Policy Support</div>
-          <div class="value">${trueSupport.toFixed(1)}%</div>
+          <div class="label">Democrat</div>
+          <div class="value" style="color:#2a7de1">${trueDem.toFixed(1)}%</div>
+        </div>
+        <div class="pop-stat">
+          <div class="label">Republican</div>
+          <div class="value" style="color:#e04040">${trueRep.toFixed(1)}%</div>
+        </div>
+        <div class="pop-stat">
+          <div class="label">Independent</div>
+          <div class="value" style="color:#FFCE52">${trueInd.toFixed(1)}%</div>
         </div>
         <div class="pop-stat">
           <div class="label">Mean Age</div>
@@ -587,139 +781,213 @@ function render() {
     </div>
   `;
 
-  // People grid — show up to 2500 of population
-  const gridSize = Math.min(2500, POP_SIZE);
+  const gridSize = Math.min(10000, POP_SIZE);
   const sampleSet = new Set(sampleIndices);
-  html += `
+  leftCol += `
     <div class="people-grid-section" id="peopleGrid">
       <h3>Population & Sample</h3>
-      <div class="subtitle">Each square is one person${gridSize < POP_SIZE ? ` (showing ${gridSize.toLocaleString()} of ${POP_SIZE.toLocaleString()})` : ` (${POP_SIZE.toLocaleString()} total)`}. ${sampleIndices.length ? `Highlighted = sampled.` : 'Click "Draw Sample" to begin.'}</div>
+      <div class="subtitle">Each square = one person${gridSize < POP_SIZE ? ` (${gridSize.toLocaleString()} of ${POP_SIZE.toLocaleString()})` : ''}. ${sampleIndices.length ? 'Highlighted = sampled.' : 'Click "Draw Sample" to begin.'}</div>
       <div class="people-grid">
         ${population.slice(0, gridSize).map((p, i) => {
           const sampled = sampleSet.has(i);
-          const cls = (p.support ? 'support' : 'oppose') +
+          const cls = p.party +
             (sampleIndices.length ? (sampled ? ' sampled' : ' not-sampled') : '');
           return `<div class="person-dot ${cls}"></div>`;
         }).join('')}
       </div>
       <div class="grid-legend">
-        <span><span class="swatch sup"></span> Supports policy</span>
-        <span><span class="swatch opp"></span> Opposes policy</span>
+        <span><span class="swatch dem"></span> Democrat</span>
+        <span><span class="swatch rep"></span> Republican</span>
+        <span><span class="swatch ind"></span> Independent</span>
       </div>
     </div>
   `;
 
-  // Current sample result
-  if (stats) {
-    html += `
-      <div class="sample-result random-sample" id="sampleResult">
-        <h3>Random Sample (n = ${stats.n})</h3>
-        <div class="est-row">
-          <span class="est-label">Policy Support</span>
-          <span class="est-value">
-            ${stats.support.toFixed(1)}%
-            <span class="est-error ${errorClass(supportError, [3, 8])}">
-              error: ${supportError > 0 ? '+' : ''}${supportError.toFixed(1)} pp
-            </span>
-          </span>
-        </div>
-        <div class="est-row">
-          <span class="est-label">Mean Age</span>
-          <span class="est-value">
-            ${stats.meanAge.toFixed(1)}
-            <span class="est-error ${errorClass(ageError, [2, 5])}">
-              error: ${ageError > 0 ? '+' : ''}${ageError.toFixed(1)} yrs
-            </span>
-          </span>
-        </div>
-        <div class="est-row">
-          <span class="est-label">Mean Income</span>
-          <span class="est-value">
-            $${stats.meanIncome.toFixed(0)}k
-            <span class="est-error ${errorClass(incomeError, [3, 7])}">
-              error: ${incomeError > 0 ? '+' : ''}${incomeError.toFixed(1)}k
-            </span>
-          </span>
-        </div>
-      </div>
-    `;
+  // --- Right column: sample results + charts + scatter ---
+  let rightCol = '';
+
+  const hasStats = !!stats;
+  let demCovers, repCovers, indCovers, ageCovers, incomeCovers;
+  let demLo, demHi, repLo, repHi, indLo, indHi, ageLo, ageHi, incomeLo, incomeHi;
+
+  if (hasStats) {
+    demCovers = Math.abs(demError) <= stats.moeDem;
+    repCovers = Math.abs(repError) <= stats.moeRep;
+    indCovers = Math.abs(indError) <= stats.moeInd;
+    ageCovers = Math.abs(ageError) <= stats.moeAge;
+    incomeCovers = Math.abs(incomeError) <= stats.moeIncome;
+    demLo = (stats.dem - stats.moeDem).toFixed(1);
+    demHi = (stats.dem + stats.moeDem).toFixed(1);
+    repLo = (stats.rep - stats.moeRep).toFixed(1);
+    repHi = (stats.rep + stats.moeRep).toFixed(1);
+    indLo = (stats.ind - stats.moeInd).toFixed(1);
+    indHi = (stats.ind + stats.moeInd).toFixed(1);
+    ageLo = (stats.meanAge - stats.moeAge).toFixed(1);
+    ageHi = (stats.meanAge + stats.moeAge).toFixed(1);
+    incomeLo = (stats.meanIncome - stats.moeIncome).toFixed(1);
+    incomeHi = (stats.meanIncome + stats.moeIncome).toFixed(1);
   }
+
+  rightCol += `
+    <div class="sample-result random-sample" id="sampleResult">
+      <h3>${hasStats ? `Random Sample Results (n = ${stats.n})` : 'Random Sample Results'}</h3>
+      <table class="sample-table">
+        <thead>
+          <tr>
+            <th>Measure</th>
+            <th data-tip="The actual population parameter — what we'd find if we measured every person. In real research this is unknown.">True Value</th>
+            <th data-tip="The statistic from our random sample. It approximates the true value but varies from sample to sample.">Sample Estimate</th>
+            <th data-tip="The 95% confidence interval. If we repeated sampling many times, about 95% of intervals would contain the true value.">95% CI</th>
+            <th data-tip="Whether this confidence interval contains the true value. Over many samples, roughly 95% should read 'Captured.'"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-label">Democrat %</td>
+            <td class="val">${trueDem.toFixed(1)}%</td>
+            <td class="val-sample">${hasStats ? stats.dem.toFixed(1) + '%' : '—'}</td>
+            <td class="ci-range">${hasStats ? demLo + '% to ' + demHi + '%' : '—'}</td>
+            <td>${hasStats ? `<span class="ci-badge ${demCovers ? 'ci-hit' : 'ci-miss'}">${demCovers ? 'Captured' : 'Missed'}</span>` : ''}</td>
+          </tr>
+          <tr>
+            <td class="row-label">Republican %</td>
+            <td class="val">${trueRep.toFixed(1)}%</td>
+            <td class="val-sample">${hasStats ? stats.rep.toFixed(1) + '%' : '—'}</td>
+            <td class="ci-range">${hasStats ? repLo + '% to ' + repHi + '%' : '—'}</td>
+            <td>${hasStats ? `<span class="ci-badge ${repCovers ? 'ci-hit' : 'ci-miss'}">${repCovers ? 'Captured' : 'Missed'}</span>` : ''}</td>
+          </tr>
+          <tr>
+            <td class="row-label">Independent %</td>
+            <td class="val">${trueInd.toFixed(1)}%</td>
+            <td class="val-sample">${hasStats ? stats.ind.toFixed(1) + '%' : '—'}</td>
+            <td class="ci-range">${hasStats ? indLo + '% to ' + indHi + '%' : '—'}</td>
+            <td>${hasStats ? `<span class="ci-badge ${indCovers ? 'ci-hit' : 'ci-miss'}">${indCovers ? 'Captured' : 'Missed'}</span>` : ''}</td>
+          </tr>
+          <tr>
+            <td class="row-label">Mean Age</td>
+            <td class="val">${trueMeanAge.toFixed(1)} yrs</td>
+            <td class="val-sample">${hasStats ? stats.meanAge.toFixed(1) + ' yrs' : '—'}</td>
+            <td class="ci-range">${hasStats ? ageLo + ' to ' + ageHi + ' yrs' : '—'}</td>
+            <td>${hasStats ? `<span class="ci-badge ${ageCovers ? 'ci-hit' : 'ci-miss'}">${ageCovers ? 'Captured' : 'Missed'}</span>` : ''}</td>
+          </tr>
+          <tr>
+            <td class="row-label">Mean Income</td>
+            <td class="val">$${trueMeanIncome.toFixed(0)}k</td>
+            <td class="val-sample">${hasStats ? '$' + stats.meanIncome.toFixed(0) + 'k' : '—'}</td>
+            <td class="ci-range">${hasStats ? '$' + incomeLo + 'k to $' + incomeHi + 'k' : '—'}</td>
+            <td>${hasStats ? `<span class="ci-badge ${incomeCovers ? 'ci-hit' : 'ci-miss'}">${incomeCovers ? 'Captured' : 'Missed'}</span>` : ''}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
 
   // Distribution comparison charts
   const sampleMembers = sampleIndices.map(i => population[i]);
-  html += `<div class="histograms-row">`;
-  html += buildDistChart('support', 'Policy Support', population.map(p => p.support ? 1 : 0), sampleMembers.map(p => p.support ? 1 : 0), 'var(--teal)', true);
-  html += buildDistChart('age', 'Age Distribution', population.map(p => p.age), sampleMembers.map(p => p.age), 'var(--purple)', false);
-  html += buildDistChart('income', 'Income Distribution ($k)', population.map(p => p.income), sampleMembers.map(p => p.income), 'var(--amber)', false);
-  html += `</div>`;
+  rightCol += `<div class="histograms-row">`;
+  rightCol += buildPartyChart(population, sampleMembers, stats);
+  rightCol += buildDistChart('age', 'Age Distribution', population.map(p => p.age), sampleMembers.map(p => p.age), 'var(--purple)', false, stats ? stats.moeAge : null);
+  rightCol += buildDistChart('income', 'Income Distribution ($k)', population.map(p => p.income), sampleMembers.map(p => p.income), 'var(--amber)', false, stats ? stats.moeIncome : null);
+  rightCol += `</div>`;
 
-  // Pedagogy note
-  html += `<p class="pedagogy-note" id="pedNote">${getPedNote()}</p>`;
+  // Convergence scatter plots
+  rightCol += `
+    <div class="scatter-section" id="scatterSection">
+      <h3>Estimate Convergence</h3>
+      <div class="subtitle">Each dot is one sample draw. The dashed line marks the true value. Draw multiple samples to see estimates converge.</div>
+      <div class="scatter-row">
+        <div class="scatter-card">
+          <div class="scatter-title">Democrat %</div>
+          <canvas id="scatter_dem"></canvas>
+        </div>
+        <div class="scatter-card">
+          <div class="scatter-title">Mean Age</div>
+          <canvas id="scatter_age"></canvas>
+        </div>
+        <div class="scatter-card">
+          <div class="scatter-title">Mean Income</div>
+          <canvas id="scatter_income"></canvas>
+        </div>
+      </div>
+      <div class="scatter-count">${drawHistory.length} sample${drawHistory.length !== 1 ? 's' : ''} drawn</div>
+    </div>
+  `;
+
+  // Assemble two-column layout
+  html += `<div class="two-col">`;
+  html += `<div class="col-left">${leftCol}</div>`;
+  html += `<div class="col-right">${rightCol}</div>`;
+  html += `</div>`;
 
   area.innerHTML = html;
 
+  // Render scatter plots (must happen after innerHTML so canvases exist)
+  renderScatterPlots();
+
   // Animate in
   requestAnimationFrame(() => {
-    document.querySelectorAll('.pop-overview, .people-grid-section, .sample-result, .sampling-dist')
+    document.querySelectorAll('.pop-overview, .people-grid-section, .sample-result, .sampling-dist, .scatter-section')
       .forEach((el, i) => {
         setTimeout(() => el.classList.add('visible'), i * 80);
       });
   });
 }
 
-function buildDistChart(key, title, popVals, sampleVals, color, isBinary) {
-  const hasSample = sampleVals.length > 0;
+function buildPartyChart(pop, samMembers, stats) {
+  const hasSample = samMembers.length > 0;
+  const parties = [
+    { key: 'dem', label: 'Dem', color: '#2a7de1' },
+    { key: 'rep', label: 'Rep', color: '#e04040' },
+    { key: 'ind', label: 'Ind', color: '#FFCE52' },
+  ];
 
-  if (isBinary) {
-    // Bar chart: support vs oppose, population vs sample
-    const popPct = (popVals.filter(v => v === 1).length / popVals.length * 100);
-    const samPct = hasSample ? (sampleVals.filter(v => v === 1).length / sampleVals.length * 100) : null;
-    const error = samPct !== null ? samPct - popPct : null;
+  const popN = pop.length;
+  const samN = samMembers.length || 1;
+  const popCounts = { dem: 0, rep: 0, ind: 0 };
+  const samCounts = { dem: 0, rep: 0, ind: 0 };
+  pop.forEach(p => popCounts[p.party]++);
+  samMembers.forEach(p => samCounts[p.party]++);
 
-    let barsHtml = `
-      <div style="display:flex; gap:1.5rem; justify-content:center; align-items:flex-end; height:140px; padding:0 1rem;">
-        <div style="text-align:center; flex:1;">
-          <div style="display:flex; gap:4px; justify-content:center; align-items:flex-end; height:120px;">
-            <div style="width:36px; background:${color}; opacity:0.25; border-radius:3px 3px 0 0; height:${popPct * 1.1}px;" title="Population: ${popPct.toFixed(1)}%"></div>
-            ${hasSample ? `<div style="width:36px; background:${color}; border-radius:3px 3px 0 0; height:${samPct * 1.1}px;" title="Sample: ${samPct.toFixed(1)}%"></div>` : ''}
-          </div>
-          <div style="font-size:0.75rem; color:var(--text-light); margin-top:4px;">Support</div>
+  let barsHtml = `<div style="display:flex; gap:0.75rem; justify-content:center; align-items:flex-end; height:140px; padding:0 0.5rem;">`;
+  parties.forEach(pt => {
+    const popPct = popCounts[pt.key] / popN * 100;
+    const samPct = hasSample ? samCounts[pt.key] / samN * 100 : null;
+    barsHtml += `
+      <div style="text-align:center; flex:1;">
+        <div style="display:flex; gap:3px; justify-content:center; align-items:flex-end; height:120px;">
+          <div style="width:28px; background:${pt.color}; opacity:0.25; border-radius:3px 3px 0 0; height:${popPct * 1.6}px;" title="Population: ${popPct.toFixed(1)}%"></div>
+          ${hasSample ? `<div style="width:28px; background:${pt.color}; border-radius:3px 3px 0 0; height:${samPct * 1.6}px;" title="Sample: ${samPct.toFixed(1)}%"></div>` : ''}
         </div>
-        <div style="text-align:center; flex:1;">
-          <div style="display:flex; gap:4px; justify-content:center; align-items:flex-end; height:120px;">
-            <div style="width:36px; background:${color}; opacity:0.25; border-radius:3px 3px 0 0; height:${(100 - popPct) * 1.1}px;" title="Population: ${(100 - popPct).toFixed(1)}%"></div>
-            ${hasSample ? `<div style="width:36px; background:${color}; border-radius:3px 3px 0 0; height:${(100 - samPct) * 1.1}px;" title="Sample: ${(100 - samPct).toFixed(1)}%"></div>` : ''}
-          </div>
-          <div style="font-size:0.75rem; color:var(--text-light); margin-top:4px;">Oppose</div>
-        </div>
+        <div style="font-size:0.75rem; color:var(--text-light); margin-top:4px;">${pt.label}</div>
       </div>`;
+  });
+  barsHtml += `</div>`;
 
-    let statsHtml = `<div class="dist-stats">`;
-    statsHtml += `<div class="stat-item"><div class="stat-label">Population</div><div class="stat-val">${popPct.toFixed(1)}%</div></div>`;
-    if (hasSample) {
-      statsHtml += `<div class="stat-item"><div class="stat-label">Sample</div><div class="stat-val" style="color:${color}">${samPct.toFixed(1)}%</div></div>`;
-      statsHtml += `<div class="stat-item"><div class="stat-label">Error</div><div class="stat-val"><span class="est-error ${errorClass(error, [3, 8])}">${error > 0 ? '+' : ''}${error.toFixed(1)} pp</span></div></div>`;
-    }
-    statsHtml += `</div>`;
+  let legendHtml = `<div class="conv-legend" style="margin-top:0.5rem;">
+    <span style="opacity:0.4;">&#9632; Population</span>
+    ${hasSample ? `<span>&#9632; Sample</span>` : ''}
+  </div>`;
 
-    let legendHtml = `<div class="conv-legend" style="margin-top:0.5rem;">
-      <span><span class="swatch" style="background:${color}; opacity:0.25; width:10px; height:10px; border-radius:2px; display:inline-block;"></span> Population</span>
-      ${hasSample ? `<span><span class="swatch" style="background:${color}; width:10px; height:10px; border-radius:2px; display:inline-block;"></span> Sample</span>` : ''}
+  return `
+    <div class="sampling-dist" id="samplingDist_party">
+      <h3>Party Identification</h3>
+      ${barsHtml}
+      ${legendHtml}
     </div>`;
+}
 
-    return `
-      <div class="sampling-dist" id="samplingDist_${key}">
-        <h3>${title}</h3>
-        ${barsHtml}
-        ${statsHtml}
-        ${legendHtml}
-      </div>`;
-  }
+function buildDistChart(key, title, popVals, sampleVals, color, isBinary, moe) {
+  const hasSample = sampleVals.length > 0;
 
   // Continuous: paired bars per bin
   const allVals = popVals;
-  const minVal = Math.floor(Math.min(...allVals));
-  const maxVal = Math.ceil(Math.max(...allVals));
+  let minVal = Infinity, maxVal = -Infinity;
+  for (let i = 0; i < allVals.length; i++) {
+    if (allVals[i] < minVal) minVal = allVals[i];
+    if (allVals[i] > maxVal) maxVal = allVals[i];
+  }
+  minVal = Math.floor(minVal);
+  maxVal = Math.ceil(maxVal);
   const range = maxVal - minVal || 1;
   const nBins = 15;
   const binWidth = range / nBins;
@@ -769,6 +1037,8 @@ function buildDistChart(key, title, popVals, sampleVals, color, isBinary) {
   statsHtml += `<div class="stat-item"><div class="stat-label">Pop. Mean</div><div class="stat-val">${fmt(popMean)}</div></div>`;
   if (hasSample) {
     statsHtml += `<div class="stat-item"><div class="stat-label">Sample Mean</div><div class="stat-val" style="color:${color}">${fmt(samMean)}</div></div>`;
+    const moeStr = isIncome ? `&pm;$${moe !== null ? moe.toFixed(1) : '?'}k` : `&pm;${moe !== null ? moe.toFixed(1) : '?'}${errUnit}`;
+    statsHtml += `<div class="stat-item"><div class="stat-label">MOE</div><div class="stat-val">${moeStr}</div></div>`;
     statsHtml += `<div class="stat-item"><div class="stat-label">Error</div><div class="stat-val"><span class="est-error ${errorClass(error, errThresh)}">${error > 0 ? '+' : ''}${error.toFixed(1)}${errUnit}</span></div></div>`;
   }
   statsHtml += `</div>`;
@@ -797,6 +1067,142 @@ function buildDistChart(key, title, popVals, sampleVals, color, isBinary) {
   `;
 }
 
+function renderScatterPlots() {
+  const configs = [
+    { id: 'scatter_dem', key: 'dem', label: 'Democrat (%)', color: '#2a7de1', trueVal: trueDem, fmt: v => v.toFixed(1) + '%' },
+    { id: 'scatter_age', key: 'meanAge', label: 'Mean Age', color: '#6c5ce7', trueVal: trueMeanAge, fmt: v => v.toFixed(1) },
+    { id: 'scatter_income', key: 'meanIncome', label: 'Mean Income', color: '#e9a820', trueVal: trueMeanIncome, fmt: v => '$' + v.toFixed(0) + 'k' },
+  ];
+
+  configs.forEach(cfg => {
+    const canvas = document.getElementById(cfg.id);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    const W = rect.width;
+    const H = rect.height;
+
+    const pad = { top: 20, right: 20, bottom: 32, left: 50 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Determine axis ranges
+    const vals = drawHistory.map(d => d[cfg.key]);
+    const ns = drawHistory.map(d => d.n);
+    const allVals = [...vals, cfg.trueVal];
+    let yMin, yMax;
+    if (vals.length > 0) {
+      const dataMin = Math.min(...allVals);
+      const dataMax = Math.max(...allVals);
+      const yPad = Math.max((dataMax - dataMin) * 0.15, cfg.key === 'dem' ? 5 : cfg.key === 'meanIncome' ? 3 : 2);
+      yMin = dataMin - yPad;
+      yMax = dataMax + yPad;
+    } else {
+      // No data yet — show range around true value
+      const spread = cfg.key === 'dem' ? 15 : cfg.key === 'meanIncome' ? 10 : 8;
+      yMin = cfg.trueVal - spread;
+      yMax = cfg.trueVal + spread;
+    }
+
+    const xMin = 0;
+    const xMax = Math.max(2000, ...ns, parseInt(document.getElementById('sampleSlider').value));
+
+    function toX(n) { return pad.left + (n - xMin) / (xMax - xMin) * plotW; }
+    function toY(v) { return pad.top + (1 - (v - yMin) / (yMax - yMin)) * plotH; }
+
+    // Grid lines
+    ctx.strokeStyle = '#e8ecf0';
+    ctx.lineWidth = 1;
+    const yTicks = 5;
+    for (let i = 0; i <= yTicks; i++) {
+      const y = pad.top + (i / yTicks) * plotH;
+      ctx.beginPath();
+      ctx.moveTo(pad.left, y);
+      ctx.lineTo(W - pad.right, y);
+      ctx.stroke();
+    }
+
+    // True value line
+    const trueY = toY(cfg.trueVal);
+    ctx.strokeStyle = '#1a2744';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(pad.left, trueY);
+    ctx.lineTo(W - pad.right, trueY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // True value label
+    ctx.fillStyle = '#1a2744';
+    ctx.font = '600 11px Inter, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('True: ' + cfg.fmt(cfg.trueVal), pad.left + 4, trueY - 6);
+
+    // Dots
+    drawHistory.forEach((d, i) => {
+      const x = toX(d.n);
+      const y = toY(d[cfg.key]);
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = cfg.color;
+      ctx.globalAlpha = 0.7;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = cfg.color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Highlight the most recent dot
+      if (i === drawHistory.length - 1) {
+        ctx.beginPath();
+        ctx.arc(x, y, 8, 0, Math.PI * 2);
+        ctx.strokeStyle = cfg.color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    });
+
+    // Axes
+    ctx.strokeStyle = '#bcc5d0';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, pad.top);
+    ctx.lineTo(pad.left, H - pad.bottom);
+    ctx.lineTo(W - pad.right, H - pad.bottom);
+    ctx.stroke();
+
+    // X-axis labels
+    ctx.fillStyle = '#5a6c7d';
+    ctx.font = '11px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    const xTickCount = 4;
+    for (let i = 0; i <= xTickCount; i++) {
+      const val = xMin + (i / xTickCount) * (xMax - xMin);
+      ctx.fillText(Math.round(val).toLocaleString(), toX(val), H - pad.bottom + 16);
+    }
+
+    // Y-axis labels
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= yTicks; i++) {
+      const val = yMax - (i / yTicks) * (yMax - yMin);
+      ctx.fillText(cfg.fmt(val), pad.left - 6, pad.top + (i / yTicks) * plotH + 4);
+    }
+
+    // X-axis title
+    ctx.fillStyle = '#5a6c7d';
+    ctx.font = '11px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Sample Size (n)', pad.left + plotW / 2, H - 2);
+  });
+}
+
 function getPedNote() {
   if (sampleIndices.length === 0) {
     return 'Click "Draw Sample" to select people from the population and see how well the sample reflects reality.';
@@ -808,6 +1214,7 @@ function getPedNote() {
 }
 
 function newPopulation() {
+  drawHistory = [];
   generatePopulation();
   render();
 }
@@ -815,6 +1222,12 @@ function newPopulation() {
 document.getElementById('popSlider').addEventListener('input', function() {
   document.getElementById('popDisplay').textContent = parseInt(this.value).toLocaleString();
   POP_SIZE = parseInt(this.value);
+  const sampleSlider = document.getElementById('sampleSlider');
+  if (parseInt(sampleSlider.value) > POP_SIZE) {
+    sampleSlider.value = POP_SIZE;
+    document.getElementById('nDisplay').textContent = POP_SIZE;
+  }
+  drawHistory = [];
   generatePopulation();
   sampleIndices = [];
   render();
