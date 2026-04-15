@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Understanding Standard Deviation</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy: #1a2744;
+  --teal: #2a9d8f;
+  --coral: #e07c4f;
+  --green: #27ae60;
+  --bg: #f5f6f8;
+  --card-bg: #ffffff;
+  --text: #2c3e50;
+  --text-light: #5a6c7d;
+  --border: #dce1e8;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+h1, h2, h3 { font-family: 'Source Serif 4', serif; }
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--card-bg);
+  border-bottom: 2px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.toolbar h1 {
+  font-size: 1.1rem;
+  color: var(--navy);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.control-group label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.control-group input[type="range"] {
+  width: 100px;
+  accent-color: var(--navy);
+}
+
+.n-display {
+  font-weight: 600;
+  color: var(--navy);
+  min-width: 1.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.btn {
+  padding: 0.4rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-primary { background: var(--navy); color: #fff; }
+.btn-primary:hover { opacity: 0.85; }
+
+.btn-step { background: var(--teal); color: #fff; min-width: 80px; }
+.btn-step:hover { opacity: 0.85; }
+.btn-step:disabled { opacity: 0.4; cursor: default; }
+
+.container {
+  max-width: 100%;
+  padding: 0.5rem 1rem 1rem;
+}
+
+/* Step navigation + explanation */
+.step-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  background: var(--card-bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.step-indicators {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.step-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background 0.2s;
+}
+
+.step-dot.active { background: var(--teal); }
+.step-dot.completed { background: var(--navy); }
+
+.step-title {
+  font-family: 'Source Serif 4', serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--navy);
+  white-space: nowrap;
+}
+
+.step-explanation {
+  font-size: 0.82rem;
+  color: var(--text-light);
+  flex: 1;
+}
+
+.step-nav-btns {
+  display: flex;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+
+/* Canvas cards */
+.classes-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.class-card {
+  background: var(--card-bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+}
+
+.class-card.a { border-top: 3px solid var(--teal); }
+.class-card.b { border-top: 3px solid var(--coral); }
+
+.class-card canvas {
+  width: 100%;
+  height: 400px;
+  display: block;
+}
+
+/* Formula card */
+.formula-card {
+  background: var(--card-bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  padding: 0.75rem 1rem;
+}
+
+.formula-card h3 {
+  font-size: 0.9rem;
+  color: var(--navy);
+  margin-bottom: 0.4rem;
+}
+
+.formula-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.formula-table th {
+  text-align: left;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-light);
+  border-bottom: 2px solid var(--border);
+}
+
+.formula-table th.col-a { color: var(--teal); }
+.formula-table th.col-b { color: var(--coral); }
+
+.formula-table td {
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--bg);
+}
+
+.formula-table td:first-child {
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.formula-table .val-a { font-weight: 600; color: var(--teal); }
+.formula-table .val-b { font-weight: 600; color: var(--coral); }
+
+.formula-table .highlight td {
+  background: #f0f7f5;
+  font-weight: 600;
+}
+
+.formula-table .highlight .val-a,
+.formula-table .highlight .val-b {
+  font-size: 1rem;
+}
+
+@media (max-width: 900px) {
+  .classes-row { grid-template-columns: 1fr; }
+  .step-bar { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+  .step-nav-btns { margin-left: 0; }
+}
+
+@media (max-width: 600px) {
+  .toolbar { flex-direction: column; gap: 0.5rem; }
+  .controls { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <h1>Standard Deviation: Measuring Spread</h1>
+  <div class="controls">
+    <div class="control-group">
+      <label>Class A spread:</label>
+      <input type="range" id="spreadA" min="2" max="12" value="4" step="1">
+      <span class="n-display" id="spreadADisplay">4</span>
+    </div>
+    <div class="control-group">
+      <label>Class B spread:</label>
+      <input type="range" id="spreadB" min="2" max="20" value="14" step="1">
+      <span class="n-display" id="spreadBDisplay">14</span>
+    </div>
+    <button class="btn btn-primary" onclick="regenerate()">New Classes</button>
+  </div>
+</div>
+<div class="container">
+  <div class="step-bar">
+    <div class="step-indicators" id="stepDots"></div>
+    <div class="step-title" id="stepTitle"></div>
+    <div class="step-explanation" id="stepExplanation"></div>
+    <div class="step-nav-btns">
+      <button class="btn btn-step" id="prevBtn" onclick="prevStep()">&#8592; Prev</button>
+      <button class="btn btn-step" id="nextBtn" onclick="nextStep()">Next &#8594;</button>
+    </div>
+  </div>
+  <div class="classes-row">
+    <div class="class-card a"><canvas id="canvasA"></canvas></div>
+    <div class="class-card b"><canvas id="canvasB"></canvas></div>
+  </div>
+  <div class="formula-card" id="formulaCard"></div>
+</div>
+
+<script>
+const N = 10;
+const TARGET_MEAN = 75;
+let classA = [];
+let classB = [];
+let currentStep = 0;
+const TOTAL_STEPS = 4;
+
+const STEPS = [
+  { title: 'Step 1: The Data',
+    text: 'Here are exam scores for two classes. Both have a similar average, but do the scores look the same? Notice how Class B\'s scores are more spread out.' },
+  { title: 'Step 2: Deviations',
+    text: 'Each line shows how far a score is from the mean \u2014 its deviation. Scores above the mean have positive deviations, below have negative. Notice Class B has much longer lines.' },
+  { title: 'Step 3: Square the Deviations',
+    text: 'We square each deviation so all values are positive and large deviations are emphasized. Each square\'s area equals the squared deviation \u2014 bigger squares mean the score was farther from the mean.' },
+  { title: 'Step 4: Standard Deviation',
+    text: 'Average the squared deviations to get the variance, then take the square root to return to the original units. The SD is the typical distance from the mean. The shaded band shows \u00b11 SD.' },
+];
+
+function randNorm(mu, sigma) {
+  const u1 = Math.random(), u2 = Math.random();
+  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  return mu + z * sigma;
+}
+
+function generateClass(spread) {
+  return Array.from({ length: N }, () =>
+    Math.max(30, Math.min(100, Math.round(randNorm(TARGET_MEAN, spread))))
+  );
+}
+
+function avg(arr) { return arr.reduce((a, b) => a + b, 0) / arr.length; }
+
+function computeStats(data) {
+  const m = avg(data);
+  const devs = data.map(v => v - m);
+  const sqDevs = devs.map(d => d * d);
+  const sumSq = sqDevs.reduce((a, b) => a + b, 0);
+  const variance = sumSq / (data.length - 1);
+  const sd = Math.sqrt(variance);
+  return { mean: m, devs, sqDevs, sumSq, variance, sd };
+}
+
+function layoutDots(data, toX, baseY, dotR) {
+  const indexed = data.map((v, i) => ({ v, i })).sort((a, b) => a.v - b.v);
+  const positions = [];
+  indexed.forEach(({ v, i }) => {
+    const x = toX(v);
+    let y = baseY;
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const tryY = baseY + (attempt === 0 ? 0 : (attempt % 2 === 1 ? -1 : 1) * Math.ceil(attempt / 2) * dotR * 2.3);
+      const overlap = positions.some(p => Math.abs(x - p.x) < dotR * 2 && Math.abs(tryY - p.y) < dotR * 2);
+      if (!overlap) { y = tryY; break; }
+    }
+    positions.push({ x, y, v, origIdx: i });
+  });
+  return positions;
+}
+
+function regenerate() {
+  const sA = parseInt(document.getElementById('spreadA').value);
+  const sB = parseInt(document.getElementById('spreadB').value);
+  classA = generateClass(sA);
+  classB = generateClass(sB);
+  render();
+}
+
+function nextStep() { if (currentStep < TOTAL_STEPS - 1) { currentStep++; render(); } }
+function prevStep() { if (currentStep > 0) { currentStep--; render(); } }
+
+function render() {
+  // Compute shared axis range from both classes
+  const all = [...classA, ...classB];
+  const lo = Math.min(...all);
+  const hi = Math.max(...all);
+  const pad = Math.max(5, (hi - lo) * 0.15);
+  const scoreMin = Math.floor(lo - pad);
+  const scoreMax = Math.ceil(hi + pad);
+
+  // Shared square scale: based on max absolute deviation across both classes
+  const statsA = computeStats(classA);
+  const statsB = computeStats(classB);
+  const maxAbsDev = Math.max(...statsA.devs.map(Math.abs), ...statsB.devs.map(Math.abs));
+
+  renderCanvas('canvasA', classA, '#2a9d8f', 'Class A', scoreMin, scoreMax, maxAbsDev);
+  renderCanvas('canvasB', classB, '#e07c4f', 'Class B', scoreMin, scoreMax, maxAbsDev);
+  updateStepBar();
+  updateFormula(statsA, statsB);
+}
+
+function renderCanvas(canvasId, data, color, label, scoreMin, scoreMax, maxAbsDev) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  const W = rect.width;
+  const H = rect.height;
+
+  const st = computeStats(data);
+  const scoreRange = scoreMax - scoreMin;
+
+  // Layout regions
+  const plotLeft = 40;
+  const plotRight = W - 15;
+  const plotW = plotRight - plotLeft;
+  const dotAreaTop = 40;
+  const dotAreaBottom = 180;
+  const numberLineY = dotAreaBottom;
+  const sqAreaTop = 205;
+  const sqAreaBottom = H - 15;
+
+  const toX = v => plotLeft + (v - scoreMin) / scoreRange * plotW;
+  const pxPerUnit = plotW / scoreRange;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Title
+  ctx.font = '600 14px "Source Serif 4", serif';
+  ctx.fillStyle = color;
+  ctx.textAlign = 'left';
+  ctx.fillText(label + ' Exam Scores', 8, 22);
+
+  // Step 4: SD band (behind everything)
+  if (currentStep >= 3) {
+    const sdLeft = toX(st.mean - st.sd);
+    const sdRight = toX(st.mean + st.sd);
+    ctx.fillStyle = color + '18';
+    ctx.fillRect(sdLeft, dotAreaTop - 5, sdRight - sdLeft, dotAreaBottom - dotAreaTop + 10);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    [sdLeft, sdRight].forEach(x => {
+      ctx.beginPath();
+      ctx.moveTo(x, dotAreaTop - 5);
+      ctx.lineTo(x, dotAreaBottom + 5);
+      ctx.stroke();
+    });
+    ctx.setLineDash([]);
+
+    // ±1 SD labels
+    ctx.font = '600 10px Inter, sans-serif';
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.fillText('-1 SD', sdLeft, dotAreaTop - 10);
+    ctx.fillText('+1 SD', sdRight, dotAreaTop - 10);
+  }
+
+  // Number line
+  ctx.strokeStyle = '#bcc5d0';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(plotLeft, numberLineY);
+  ctx.lineTo(plotRight, numberLineY);
+  ctx.stroke();
+
+  // Ticks
+  ctx.fillStyle = '#5a6c7d';
+  ctx.font = '10px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  const tickStep = scoreRange <= 30 ? 5 : 10;
+  const firstTick = Math.ceil(scoreMin / tickStep) * tickStep;
+  for (let s = firstTick; s <= scoreMax; s += tickStep) {
+    const x = toX(s);
+    ctx.beginPath();
+    ctx.moveTo(x, numberLineY);
+    ctx.lineTo(x, numberLineY + 5);
+    ctx.stroke();
+    ctx.fillText(s, x, numberLineY + 16);
+  }
+
+  // Mean line
+  const meanX = toX(st.mean);
+  ctx.strokeStyle = '#1a2744';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(meanX, dotAreaTop - 5);
+  ctx.lineTo(meanX, numberLineY + 5);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = '#1a2744';
+  ctx.font = '600 11px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Mean = ' + st.mean.toFixed(1), meanX, dotAreaTop - 12);
+
+  // Dots with beeswarm layout
+  const baseY = (dotAreaTop + dotAreaBottom) / 2;
+  const dotR = 6;
+  const dots = layoutDots(data, toX, baseY, dotR);
+
+  // Step 2+: deviation lines
+  if (currentStep >= 1) {
+    dots.forEach(dot => {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.45;
+      ctx.beginPath();
+      ctx.moveTo(dot.x, dot.y);
+      ctx.lineTo(meanX, dot.y);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      // Deviation label
+      const dev = dot.v - st.mean;
+      ctx.font = '500 8px Inter, sans-serif';
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      const labelX = (dot.x + meanX) / 2;
+      const labelY = dot.y - 9;
+      ctx.fillText((dev >= 0 ? '+' : '') + dev.toFixed(1), labelX, labelY);
+    });
+  }
+
+  // Draw dots
+  dots.forEach(dot => {
+    ctx.beginPath();
+    ctx.arc(dot.x, dot.y, dotR, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+
+  // Step 3+: squared deviation squares
+  if (currentStep >= 2) {
+    // Section label
+    ctx.font = '600 11px Inter, sans-serif';
+    ctx.fillStyle = '#1a2744';
+    ctx.textAlign = 'left';
+    ctx.fillText('Squared Deviations', 8, sqAreaTop - 3);
+
+    const maxSqSide = 55;
+    const sqScale = maxAbsDev > 0 ? maxSqSide / maxAbsDev : 1;
+    const slotW = (W - 20) / N;
+    const sqBaseY = sqAreaBottom;
+
+    st.devs.forEach((dev, i) => {
+      const side = Math.abs(dev) * sqScale;
+      const slotX = 10 + i * slotW;
+      const x = slotX + (slotW - side) / 2;
+      const y = sqBaseY - side;
+
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.2;
+      ctx.fillRect(x, y, side, side);
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x, y, side, side);
+
+      // Squared value below
+      ctx.font = '9px Inter, sans-serif';
+      ctx.fillStyle = '#5a6c7d';
+      ctx.textAlign = 'center';
+      ctx.fillText(st.sqDevs[i].toFixed(0), slotX + slotW / 2, sqBaseY + 11);
+    });
+  }
+
+  // Step 4: SD annotation on the dot plot
+  if (currentStep >= 3) {
+    const sdLeft = toX(st.mean - st.sd);
+    const sdRight = toX(st.mean + st.sd);
+    // SD bracket below number line
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    const bracketY = numberLineY + 22;
+    ctx.beginPath();
+    ctx.moveTo(sdLeft, bracketY - 3);
+    ctx.lineTo(sdLeft, bracketY);
+    ctx.lineTo(sdRight, bracketY);
+    ctx.lineTo(sdRight, bracketY - 3);
+    ctx.stroke();
+    ctx.font = '600 10px Inter, sans-serif';
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.fillText('SD = ' + st.sd.toFixed(1), (sdLeft + sdRight) / 2, bracketY + 12);
+  }
+}
+
+function updateStepBar() {
+  const step = STEPS[currentStep];
+
+  // Dots
+  let dotsHtml = '';
+  for (let i = 0; i < TOTAL_STEPS; i++) {
+    const cls = i === currentStep ? 'active' : i < currentStep ? 'completed' : '';
+    dotsHtml += `<div class="step-dot ${cls}"></div>`;
+  }
+  document.getElementById('stepDots').innerHTML = dotsHtml;
+  document.getElementById('stepTitle').textContent = step.title;
+  document.getElementById('stepExplanation').textContent = step.text;
+
+  document.getElementById('prevBtn').disabled = currentStep === 0;
+  document.getElementById('nextBtn').disabled = currentStep === TOTAL_STEPS - 1;
+}
+
+function updateFormula(statsA, statsB) {
+  const card = document.getElementById('formulaCard');
+
+  let rows = '';
+
+  // Row: Mean (always visible)
+  rows += `<tr>
+    <td>Mean (\u0078\u0304)</td>
+    <td class="val-a">${statsA.mean.toFixed(1)}</td>
+    <td class="val-b">${statsB.mean.toFixed(1)}</td>
+  </tr>`;
+
+  // Row: Deviations (step 1+)
+  if (currentStep >= 1) {
+    const fmtDevs = devs => devs.slice(0, 4).map(d => (d >= 0 ? '+' : '') + d.toFixed(1)).join(', ') + ', \u2026';
+    rows += `<tr>
+      <td>Deviations (x\u2009\u2013\u2009\u0078\u0304)</td>
+      <td class="val-a" style="font-size:0.75rem">${fmtDevs(statsA.devs)}</td>
+      <td class="val-b" style="font-size:0.75rem">${fmtDevs(statsB.devs)}</td>
+    </tr>`;
+  }
+
+  // Row: Sum of squared deviations (step 2+)
+  if (currentStep >= 2) {
+    rows += `<tr>
+      <td>\u03A3(x \u2013 \u0078\u0304)\u00B2</td>
+      <td class="val-a">${statsA.sumSq.toFixed(1)}</td>
+      <td class="val-b">${statsB.sumSq.toFixed(1)}</td>
+    </tr>`;
+  }
+
+  // Rows: Variance and SD (step 3+)
+  if (currentStep >= 3) {
+    rows += `<tr>
+      <td>Variance = \u03A3/(n\u20131)</td>
+      <td class="val-a">${statsA.variance.toFixed(1)}</td>
+      <td class="val-b">${statsB.variance.toFixed(1)}</td>
+    </tr>`;
+    rows += `<tr class="highlight">
+      <td>SD = \u221AVariance</td>
+      <td class="val-a">${statsA.sd.toFixed(1)}</td>
+      <td class="val-b">${statsB.sd.toFixed(1)}</td>
+    </tr>`;
+  }
+
+  card.innerHTML = `
+    <h3>Calculation Summary</h3>
+    <table class="formula-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th class="col-a">Class A</th>
+          <th class="col-b">Class B</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+// Slider handlers
+document.getElementById('spreadA').addEventListener('input', function () {
+  document.getElementById('spreadADisplay').textContent = this.value;
+});
+document.getElementById('spreadB').addEventListener('input', function () {
+  document.getElementById('spreadBDisplay').textContent = this.value;
+});
+
+window.addEventListener('resize', render);
+
+// Init
+regenerate();
+</script>
+</body>
+</html>
