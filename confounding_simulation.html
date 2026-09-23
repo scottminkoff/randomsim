@@ -198,38 +198,29 @@ header p {
 .icon-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 3px;
-  margin-bottom: 0.75rem;
+  gap: 1.5px;
+  margin-bottom: 0.25rem;
 }
 
 .person-icon {
-  width: 18px;
-  height: 18px;
-  border-radius: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 1.5px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 9px;
+  font-size: 0;
   font-weight: 700;
   line-height: 1;
 }
 
 .person-icon.stressed {
   background: var(--stress);
-  color: #fff;
-}
-
-.person-icon.stressed::after {
-  content: '!';
+  box-shadow: 0 0 0 1px #c0392b;
 }
 
 .person-icon.not-stressed {
   background: var(--no-stress);
-  color: #fff;
-}
-
-.person-icon.not-stressed::after {
-  content: '\2013';
 }
 
 .icon-legend {
@@ -258,10 +249,8 @@ header p {
   color: #fff;
 }
 
-.legend-swatch.stressed { background: var(--stress); }
-.legend-swatch.stressed::after { content: '!'; }
+.legend-swatch.stressed { background: var(--stress); box-shadow: 0 0 0 1.5px #c0392b; }
 .legend-swatch.not-stressed { background: var(--no-stress); }
-.legend-swatch.not-stressed::after { content: '\2013'; }
 
 /* Stress stat */
 .stress-stat {
@@ -416,6 +405,25 @@ header p {
 .within-n {
   font-size: 0.72rem;
   color: var(--text-light);
+}
+
+/* Icon grid pair below bars */
+.grid-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.grid-half-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 0.25rem;
 }
 
 .too-few {
@@ -613,6 +621,10 @@ function renderMain(area) {
   let html = `
     <div class="explainer">
       <strong>Holding constant:</strong> Instead of comparing everyone at once, compare Facebook users to non-users <em>within each level of political interest</em>. If political interest is the only confounder, this isolates the effect of Facebook.
+      <div class="icon-legend" style="margin-top:0.5rem; margin-bottom:0;">
+        <span><span class="legend-swatch stressed"></span> High stress</span>
+        <span><span class="legend-swatch not-stressed"></span> Normal/low stress</span>
+      </div>
     </div>
 
     <div class="within-row">
@@ -631,6 +643,8 @@ function renderIconGrid(people) {
 }
 
 function renderCombinedCard(pFb, pNoFb, rawDiff, adjEst, nFb, nNoFb) {
+  const fb = population.filter(p => p.x === 1);
+  const noFb = population.filter(p => p.x === 0);
   const maxPct = Math.max(pFb, pNoFb, 1);
   const barScale = 70 / maxPct;
   return `
@@ -645,6 +659,16 @@ function renderCombinedCard(pFb, pNoFb, rawDiff, adjEst, nFb, nNoFb) {
       <div class="within-n">FB: ${nFb} · Non-FB: ${nNoFb}</div>
       <div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid var(--border); font-size:0.72rem; color:var(--text-light);">
         True effect: <strong style="color:var(--navy);">${fmtDiff(trueEffect)}</strong>
+      </div>
+      <div class="grid-pair">
+        <div class="grid-half">
+          <div class="grid-half-label">FB</div>
+          ${renderIconGrid(fb)}
+        </div>
+        <div class="grid-half">
+          <div class="grid-half-label">Non-FB</div>
+          ${renderIconGrid(noFb)}
+        </div>
       </div>
     </div>`;
 }
@@ -670,6 +694,16 @@ function renderWithinCard(r) {
       <div class="within-labels"><span>FB</span><span>Non-FB</span></div>
       <div class="within-diff" style="color:${Math.abs(r.diff) < 3 ? 'var(--green)' : 'var(--navy)'};">Diff: ${fmtDiff(r.diff)}</div>
       <div class="within-n">FB: ${r.nFb} · Non-FB: ${r.nNoFb}</div>
+      <div class="grid-pair">
+        <div class="grid-half">
+          <div class="grid-half-label">FB</div>
+          ${renderIconGrid(r.fb)}
+        </div>
+        <div class="grid-half">
+          <div class="grid-half-label">Non-FB</div>
+          ${renderIconGrid(r.noFb)}
+        </div>
+      </div>
     </div>`;
 }
 
