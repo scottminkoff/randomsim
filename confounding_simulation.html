@@ -385,7 +385,7 @@ header p {
 /* Within-level cards */
 .within-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
@@ -803,34 +803,16 @@ function renderStage2(area) {
   const within = computeWithinLevel(population);
   const adjEst = weightedEstimate(within);
 
+  const withinReversed = [within[2], within[1], within[0]]; // Low, Medium, High
+
   let html = `
     <div class="explainer">
       <strong>Holding constant:</strong> Instead of comparing everyone at once, compare Facebook users to non-users <em>within each level of political interest</em>. If political interest is the only confounder, this isolates the effect of Facebook.
     </div>
 
     <div class="within-row">
-      ${within.map(r => renderWithinCard(r)).join('')}
-    </div>
-
-    <div class="card">
-      <h3>Combined Estimate</h3>
-      <div style="font-size:0.85rem; color:var(--text-light); margin-bottom:0.75rem;">
-        Average of within-level differences, weighted by the number of people at each level.
-      </div>
-      <div class="summary-strip">
-        <div class="summary-item">
-          <div class="label">Raw Difference</div>
-          <div class="value mismatch">${fmtDiff(rawDiff)}</div>
-        </div>
-        <div class="summary-item">
-          <div class="label">Within-Level Estimate</div>
-          <div class="value ${adjEst !== null && Math.abs(adjEst - trueEffect) < 5 ? 'match' : 'mismatch'}">${adjEst !== null ? fmtDiff(adjEst) : 'N/A'}</div>
-        </div>
-        <div class="summary-item">
-          <div class="label">True Effect</div>
-          <div class="value">${fmtDiff(trueEffect)}</div>
-        </div>
-      </div>
+      ${renderCombinedCard(rawDiff, adjEst)}
+      ${withinReversed.map(r => renderWithinCard(r)).join('')}
     </div>
 
     <div class="card" style="text-align:center;">
@@ -883,25 +865,8 @@ function renderStage3(area) {
 
     ${z2On ? `
     <div class="within-row">
-      ${within.map(r => renderWithinCard(r)).join('')}
-    </div>
-
-    <div class="card">
-      <h3>Combined Estimate</h3>
-      <div class="summary-strip">
-        <div class="summary-item">
-          <div class="label">Raw Difference</div>
-          <div class="value mismatch">${fmtDiff(rawDiff)}</div>
-        </div>
-        <div class="summary-item">
-          <div class="label">Within-Level Estimate</div>
-          <div class="value ${adjEst !== null && Math.abs(adjEst - trueEffect) < 5 ? 'match' : 'mismatch'}">${adjEst !== null ? fmtDiff(adjEst) : 'N/A'}</div>
-        </div>
-        <div class="summary-item">
-          <div class="label">True Effect</div>
-          <div class="value">${fmtDiff(trueEffect)}</div>
-        </div>
-      </div>
+      ${renderCombinedCard(rawDiff, adjEst)}
+      ${[within[2], within[1], within[0]].map(r => renderWithinCard(r)).join('')}
     </div>
 
     <div class="card">
@@ -954,6 +919,28 @@ function renderIconGrid(people) {
   return `<div class="icon-grid">${people.map(p =>
     `<div class="person-icon ${p.y === 1 ? 'stressed' : 'not-stressed'}"></div>`
   ).join('')}</div>`;
+}
+
+function renderCombinedCard(rawDiff, adjEst) {
+  return `
+    <div class="within-card" style="border-top: 3px solid var(--navy);">
+      <h4>Combined</h4>
+      <div style="font-size:0.72rem; color:var(--text-light); margin-bottom:0.5rem;">Weighted average of within-level differences</div>
+      <div class="summary-strip" style="flex-direction:column; gap:0.4rem; padding:0.5rem; margin-bottom:0;">
+        <div class="summary-item" style="min-width:auto;">
+          <div class="label">Raw Difference</div>
+          <div class="value mismatch" style="font-size:1rem;">${fmtDiff(rawDiff)}</div>
+        </div>
+        <div class="summary-item" style="min-width:auto;">
+          <div class="label">Within-Level Est.</div>
+          <div class="value ${adjEst !== null && Math.abs(adjEst - trueEffect) < 5 ? 'match' : 'mismatch'}" style="font-size:1rem;">${adjEst !== null ? fmtDiff(adjEst) : 'N/A'}</div>
+        </div>
+        <div class="summary-item" style="min-width:auto;">
+          <div class="label">True Effect</div>
+          <div class="value" style="font-size:1rem;">${fmtDiff(trueEffect)}</div>
+        </div>
+      </div>
+    </div>`;
 }
 
 function renderWithinCard(r) {
