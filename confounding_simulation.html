@@ -361,6 +361,14 @@ header p {
   margin-bottom: 0.5rem;
 }
 
+.bar-label {
+  font-size: 0.68rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 0.15rem;
+}
+
 .within-bar-row {
   display: flex;
   gap: 0.5rem;
@@ -650,6 +658,7 @@ function renderCombinedCard(pFb, pNoFb, rawDiff, adjEst, nFb, nNoFb) {
   return `
     <div class="within-card" style="border-top: 3px solid var(--amber);">
       <h4>Combined (Raw)</h4>
+      <div class="bar-label">% High Stress</div>
       <div class="within-bar-row">
         <div class="within-bar" style="background:var(--amber); height:${Math.max(2, pFb * barScale)}px;">${pFb.toFixed(0)}%</div>
         <div class="within-bar" style="background:var(--amber-light); height:${Math.max(2, pNoFb * barScale)}px;">${pNoFb.toFixed(0)}%</div>
@@ -687,6 +696,7 @@ function renderWithinCard(r) {
   return `
     <div class="within-card">
       <h4>${r.z} Interest</h4>
+      <div class="bar-label">% High Stress</div>
       <div class="within-bar-row">
         <div class="within-bar fb" style="height:${Math.max(2, r.pFb * barScale)}px;">${r.pFb.toFixed(0)}%</div>
         <div class="within-bar nfb" style="height:${Math.max(2, r.pNoFb * barScale)}px;">${r.pNoFb.toFixed(0)}%</div>
