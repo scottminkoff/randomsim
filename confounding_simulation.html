@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confounding Simulation</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --slate: #2c3e50;
+  --navy: #1a2744;
+  --teal: #2a9d8f;
+  --teal-light: #40b4a6;
+  --amber: #e9a820;
+  --amber-light: #f0be50;
+  --red: #c0392b;
+  --red-light: #e74c3c;
+  --green: #27ae60;
+  --bg: #f5f6f8;
+  --card-bg: #ffffff;
+  --text: #2c3e50;
+  --text-light: #5a6c7d;
+  --border: #dce1e8;
+  --stress: #e07c4f;
+  --no-stress: #8e99a4;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+h1, h2, h3 { font-family: 'Source Serif 4', serif; }
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border);
+}
+
+header h1 {
+  font-size: 2rem;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+header p {
+  color: var(--text-light);
+  font-size: 0.95rem;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  background: var(--card-bg);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.control-group label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.control-group input[type="range"] {
+  width: 120px;
+  accent-color: var(--teal);
+}
+
+.control-group select {
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  background: #fff;
+  color: var(--text);
+}
+
+.n-display {
+  font-weight: 600;
+  color: var(--navy);
+  min-width: 2rem;
+  text-align: center;
+}
+
+.seed-display {
+  font-size: 0.78rem;
+  color: var(--text-light);
+  font-family: monospace;
+}
+
+.btn {
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-primary { background: var(--teal); color: #fff; }
+.btn-primary:hover { background: var(--teal-light); }
+.btn-secondary { background: var(--amber); color: var(--navy); }
+.btn-secondary:hover { background: var(--amber-light); }
+.btn-outline {
+  background: transparent;
+  color: var(--navy);
+  border: 2px solid var(--navy);
+}
+.btn-outline:hover { background: var(--navy); color: #fff; }
+
+/* Stage tabs */
+.stage-tabs {
+  display: flex;
+  background: var(--bg);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+
+.stage-tabs button {
+  flex: 1;
+  padding: 0.65rem 0.75rem;
+  border: none;
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-light);
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.stage-tabs button.active {
+  background: var(--navy);
+  color: #fff;
+}
+
+.stage-tabs button:not(:last-child) {
+  border-right: 1px solid var(--border);
+}
+
+/* Explainer */
+.explainer {
+  background: var(--card-bg);
+  border-left: 3px solid var(--teal);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 0 8px 8px 0;
+  font-size: 0.88rem;
+  color: var(--text-light);
+}
+
+/* Cards */
+.card {
+  background: var(--card-bg);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card h3 {
+  font-size: 1rem;
+  color: var(--navy);
+  margin-bottom: 0.75rem;
+}
+
+/* Comparison panels */
+.comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.group-card {
+  background: var(--card-bg);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 1.25rem 1.5rem;
+}
+
+.group-card.fb { border-top: 3px solid var(--teal); }
+.group-card.no-fb { border-top: 3px solid var(--navy); }
+
+.group-card h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+.group-card.fb h3 { color: var(--teal); }
+.group-card.no-fb h3 { color: var(--navy); }
+
+.group-n {
+  font-size: 0.82rem;
+  color: var(--text-light);
+  margin-bottom: 0.75rem;
+}
+
+/* Person icons */
+.icon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-bottom: 0.75rem;
+}
+
+.person-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.person-icon.stressed {
+  background: var(--stress);
+  color: #fff;
+}
+
+.person-icon.stressed::after {
+  content: '!';
+}
+
+.person-icon.not-stressed {
+  background: var(--no-stress);
+  color: #fff;
+}
+
+.person-icon.not-stressed::after {
+  content: '\2013';
+}
+
+.icon-legend {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-bottom: 0.5rem;
+}
+
+.icon-legend span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.legend-swatch.stressed { background: var(--stress); }
+.legend-swatch.stressed::after { content: '!'; }
+.legend-swatch.not-stressed { background: var(--no-stress); }
+.legend-swatch.not-stressed::after { content: '\2013'; }
+
+/* Stress stat */
+.stress-stat {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 0.25rem;
+}
+
+.stress-detail {
+  font-size: 0.82rem;
+  color: var(--text-light);
+}
+
+/* Balance table */
+.balance-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.balance-table th {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-light);
+  border-bottom: 2px solid var(--border);
+}
+
+.balance-table td {
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid var(--bg);
+}
+
+.balance-table td:first-child {
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.diff-badge {
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.82rem;
+}
+
+.diff-badge.balanced { background: #e8f5e9; color: var(--green); }
+.diff-badge.imbalanced { background: #fdecea; color: var(--red); }
+
+/* Summary strip */
+.summary-strip {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 1rem;
+  background: var(--bg);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.summary-item {
+  text-align: center;
+  min-width: 120px;
+}
+
+.summary-item .label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-light);
+  margin-bottom: 0.2rem;
+}
+
+.summary-item .value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.summary-item .value.match { color: var(--green); }
+.summary-item .value.mismatch { color: var(--red); }
+
+/* Within-level cards */
+.within-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.within-card {
+  background: var(--card-bg);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 1rem;
+  text-align: center;
+}
+
+.within-card h4 {
+  font-family: 'Source Serif 4', serif;
+  font-size: 0.95rem;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+}
+
+.within-bar-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+  justify-content: center;
+  height: 80px;
+  margin-bottom: 0.5rem;
+}
+
+.within-bar {
+  width: 40px;
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #fff;
+  min-height: 2px;
+  transition: height 0.3s;
+}
+
+.within-bar.fb { background: var(--teal); }
+.within-bar.nfb { background: var(--navy); }
+
+.within-labels {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: var(--text-light);
+  margin-bottom: 0.4rem;
+}
+
+.within-diff {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.15rem;
+}
+
+.within-n {
+  font-size: 0.72rem;
+  color: var(--text-light);
+}
+
+.too-few {
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--text-light);
+  padding: 1rem 0;
+}
+
+/* Histogram canvas */
+.hist-canvas-wrap {
+  margin-top: 1rem;
+}
+
+.hist-canvas-wrap canvas {
+  width: 100%;
+  height: 220px;
+  display: block;
+}
+
+.hist-legend {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-top: 0.4rem;
+}
+
+.hist-legend span::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.hist-legend .raw::before { background: var(--red); opacity: 0.5; }
+.hist-legend .adj::before { background: var(--teal); opacity: 0.7; }
+.hist-legend .truth::before { background: var(--navy); }
+
+/* Prompt */
+.prompt {
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--navy);
+  font-style: italic;
+  margin-top: 1rem;
+  font-weight: 500;
+}
+
+/* Toggle */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.toggle-switch.on { background: var(--teal); }
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  transition: left 0.2s;
+}
+
+.toggle-switch.on::after { left: 22px; }
+
+.toggle-label {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+@media (max-width: 800px) {
+  .comparison { grid-template-columns: 1fr; }
+  .within-row { grid-template-columns: 1fr; }
+  .controls { flex-direction: column; }
+  header h1 { font-size: 1.5rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Confounding in Observational Studies</h1>
+    <p>Why does a raw comparison between groups sometimes mislead? This simulation shows how confounding variables create spurious associations — and what we can and can't do about it.</p>
+  </header>
+
+  <div class="controls">
+    <div class="control-group">
+      <label for="nSelect">N:</label>
+      <select id="nSelect">
+        <option value="200" selected>200</option>
+        <option value="1000">1,000</option>
+        <option value="5000">5,000</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label for="effectSlider">True effect of Facebook:</label>
+      <input type="range" id="effectSlider" min="-20" max="30" value="0" step="1">
+      <span class="n-display" id="effectDisplay">0 pp</span>
+    </div>
+    <button class="btn btn-primary" onclick="newPopulation()">New Population</button>
+    <span class="seed-display" id="seedDisplay"></span>
+  </div>
+
+  <div class="stage-tabs">
+    <button id="tab1" class="active" onclick="setStage(1)">1. Self-Selection</button>
+    <button id="tab2" onclick="setStage(2)">2. Hold Constant</button>
+    <button id="tab3" onclick="setStage(3)">3. Unmeasured Confounder</button>
+  </div>
+
+  <div id="stageArea"></div>
+</div>
+
+<script>
+// --- Seeded PRNG (mulberry32) ---
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+let seed = Math.floor(Math.random() * 100000);
+let rng = mulberry32(seed);
+
+// --- State ---
+let N = 200;
+let trueEffect = 0;  // in percentage points
+let population = [];
+let currentStage = 1;
+let z2On = false;
+let z2Revealed = false;
+let simResults = null; // for repeat-500
+
+// --- Data-generating process ---
+const Z_LEVELS = ['High', 'Medium', 'Low'];
+const Z_WEIGHTS = [1/3, 1/3, 1/3];
+const P_X_GIVEN_Z = { High: 0.80, Medium: 0.50, Low: 0.20 };
+const P_Y_BASE_Z = { High: 0.70, Medium: 0.40, Low: 0.15 };
+
+function clamp01(p) { return Math.max(0, Math.min(1, p)); }
+
+function generatePopulation() {
+  rng = mulberry32(seed);
+  population = [];
+  for (let i = 0; i < N; i++) {
+    // Z: roughly 1/3 each
+    const r = rng();
+    let z;
+    if (r < 1/3) z = 'High';
+    else if (r < 2/3) z = 'Medium';
+    else z = 'Low';
+
+    // Z2: ~50% strong partisans
+    const strongPartisan = rng() < 0.5;
+
+    // Self-selection into X
+    let pX = P_X_GIVEN_Z[z];
+    if (z2On && strongPartisan) pX = clamp01(pX + 0.25);
+    const x = rng() < pX ? 1 : 0;
+
+    // Y
+    let pY = P_Y_BASE_Z[z] + (trueEffect / 100) * x;
+    if (z2On && strongPartisan) pY += 0.20;
+    pY = clamp01(pY);
+    const y = rng() < pY ? 1 : 0;
+
+    population.push({ z, strongPartisan, x, y });
+  }
+  document.getElementById('seedDisplay').textContent = 'seed: ' + seed;
+}
+
+// --- Stats helpers ---
+function groupBy(arr, key) {
+  const m = {};
+  arr.forEach(p => {
+    const k = typeof key === 'function' ? key(p) : p[key];
+    if (!m[k]) m[k] = [];
+    m[k].push(p);
+  });
+  return m;
+}
+
+function pctStressed(arr) {
+  if (!arr || arr.length === 0) return null;
+  return arr.filter(p => p.y === 1).length / arr.length * 100;
+}
+
+function computeWithinLevel(pop) {
+  const results = [];
+  for (const z of Z_LEVELS) {
+    const level = pop.filter(p => p.z === z);
+    const fb = level.filter(p => p.x === 1);
+    const noFb = level.filter(p => p.x === 0);
+    const pFb = fb.length >= 10 ? pctStressed(fb) : null;
+    const pNoFb = noFb.length >= 10 ? pctStressed(noFb) : null;
+    const diff = (pFb !== null && pNoFb !== null) ? pFb - pNoFb : null;
+    results.push({ z, fb, noFb, pFb, pNoFb, diff, nFb: fb.length, nNoFb: noFb.length, nTotal: level.length });
+  }
+  return results;
+}
+
+function weightedEstimate(withinResults) {
+  let sumW = 0, sumWD = 0;
+  withinResults.forEach(r => {
+    if (r.diff !== null) {
+      sumW += r.nTotal;
+      sumWD += r.diff * r.nTotal;
+    }
+  });
+  return sumW > 0 ? sumWD / sumW : null;
+}
+
+// --- Rendering ---
+function setStage(s) {
+  currentStage = s;
+  if (s !== 3) { z2On = false; z2Revealed = false; }
+  simResults = null;
+  document.querySelectorAll('.stage-tabs button').forEach((b, i) => b.classList.toggle('active', i === s - 1));
+  renderStage();
+}
+
+function renderStage() {
+  generatePopulation();
+  const area = document.getElementById('stageArea');
+  if (currentStage === 1) renderStage1(area);
+  else if (currentStage === 2) renderStage2(area);
+  else renderStage3(area);
+}
+
+// --- Stage 1: Self-Selection ---
+function renderStage1(area) {
+  const fb = population.filter(p => p.x === 1);
+  const noFb = population.filter(p => p.x === 0);
+  const pFb = pctStressed(fb);
+  const pNoFb = pctStressed(noFb);
+  const rawDiff = pFb - pNoFb;
+  const nFbStressed = fb.filter(p => p.y === 1).length;
+  const nNoFbStressed = noFb.filter(p => p.y === 1).length;
+
+  const showIcons = N <= 200;
+
+  // Balance table data
+  const balRows = Z_LEVELS.map(z => {
+    const inFb = fb.filter(p => p.z === z).length;
+    const inNoFb = noFb.filter(p => p.z === z).length;
+    const pctFb = fb.length > 0 ? (inFb / fb.length * 100) : 0;
+    const pctNoFb = noFb.length > 0 ? (inNoFb / noFb.length * 100) : 0;
+    return { z, pctFb, pctNoFb, diff: pctFb - pctNoFb };
+  });
+
+  let html = `
+    <div class="explainer">
+      <strong>Self-selection:</strong> People choose whether to follow politics on Facebook. Those who are more interested in politics are more likely to follow — and also more likely to be stressed, regardless of Facebook. This creates a confound.
+    </div>
+
+    <div class="icon-legend">
+      <span><span class="legend-swatch stressed"></span> High stress (!)</span>
+      <span><span class="legend-swatch not-stressed"></span> Normal/low stress (–)</span>
+    </div>
+
+    <div class="comparison">
+      <div class="group-card fb">
+        <h3>Follows Politics on Facebook</h3>
+        <div class="group-n">n = ${fb.length}</div>
+        ${showIcons ? renderIconGrid(fb) : ''}
+        <div class="stress-stat">${nFbStressed} of ${fb.length} (${pFb.toFixed(1)}%) are stressed</div>
+      </div>
+      <div class="group-card no-fb">
+        <h3>Does Not Follow</h3>
+        <div class="group-n">n = ${noFb.length}</div>
+        ${showIcons ? renderIconGrid(noFb) : ''}
+        <div class="stress-stat">${nNoFbStressed} of ${noFb.length} (${pNoFb.toFixed(1)}%) are stressed</div>
+      </div>
+    </div>
+
+    <div class="summary-strip">
+      <div class="summary-item">
+        <div class="label">Raw Difference</div>
+        <div class="value mismatch">${fmtDiff(rawDiff)}</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">True Effect</div>
+        <div class="value">${fmtDiff(trueEffect)}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Balance on Political Interest (the confounder)</h3>
+      <table class="balance-table">
+        <thead>
+          <tr>
+            <th>Political Interest</th>
+            <th>Facebook Group</th>
+            <th>Non-Facebook Group</th>
+            <th>Difference</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${balRows.map(r => `
+          <tr>
+            <td>${r.z}</td>
+            <td>${r.pctFb.toFixed(1)}%</td>
+            <td>${r.pctNoFb.toFixed(1)}%</td>
+            <td><span class="diff-badge ${Math.abs(r.diff) > 5 ? 'imbalanced' : 'balanced'}">${fmtDiff(r.diff)}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div style="font-size:0.82rem; color:var(--text-light);">
+        The Facebook group has far more high-interest people. These groups are not comparable.
+      </div>
+    </div>
+
+    <p class="prompt">What can we conclude from this raw comparison?</p>
+  `;
+  area.innerHTML = html;
+}
+
+// --- Stage 2: Hold Political Interest Constant ---
+function renderStage2(area) {
+  const fb = population.filter(p => p.x === 1);
+  const noFb = population.filter(p => p.x === 0);
+  const pFb = pctStressed(fb);
+  const pNoFb = pctStressed(noFb);
+  const rawDiff = pFb - pNoFb;
+
+  const within = computeWithinLevel(population);
+  const adjEst = weightedEstimate(within);
+
+  let html = `
+    <div class="explainer">
+      <strong>Holding constant:</strong> Instead of comparing everyone at once, compare Facebook users to non-users <em>within each level of political interest</em>. If political interest is the only confounder, this isolates the effect of Facebook.
+    </div>
+
+    <div class="within-row">
+      ${within.map(r => renderWithinCard(r)).join('')}
+    </div>
+
+    <div class="card">
+      <h3>Combined Estimate</h3>
+      <div style="font-size:0.85rem; color:var(--text-light); margin-bottom:0.75rem;">
+        Average of within-level differences, weighted by the number of people at each level.
+      </div>
+      <div class="summary-strip">
+        <div class="summary-item">
+          <div class="label">Raw Difference</div>
+          <div class="value mismatch">${fmtDiff(rawDiff)}</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">Within-Level Estimate</div>
+          <div class="value ${adjEst !== null && Math.abs(adjEst - trueEffect) < 5 ? 'match' : 'mismatch'}">${adjEst !== null ? fmtDiff(adjEst) : 'N/A'}</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">True Effect</div>
+          <div class="value">${fmtDiff(trueEffect)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="text-align:center;">
+      <button class="btn btn-outline" onclick="runRepeat500(false)">Repeat 500 Times</button>
+      <div id="histArea"></div>
+    </div>
+  `;
+  area.innerHTML = html;
+
+  if (simResults) renderHistogram(simResults, 'histArea');
+}
+
+// --- Stage 3: Unmeasured Confounder ---
+function renderStage3(area) {
+  const fb = population.filter(p => p.x === 1);
+  const noFb = population.filter(p => p.x === 0);
+  const pFb = pctStressed(fb);
+  const pNoFb = pctStressed(noFb);
+  const rawDiff = pFb - pNoFb;
+
+  const within = computeWithinLevel(population);
+  const adjEst = weightedEstimate(within);
+
+  // Balance rows (same as stage 1, plus optionally Z2)
+  const balRows = Z_LEVELS.map(z => {
+    const inFb = fb.filter(p => p.z === z).length;
+    const inNoFb = noFb.filter(p => p.z === z).length;
+    const pctFb = fb.length > 0 ? (inFb / fb.length * 100) : 0;
+    const pctNoFb = noFb.length > 0 ? (inNoFb / noFb.length * 100) : 0;
+    return { label: z + ' interest', pctFb, pctNoFb, diff: pctFb - pctNoFb };
+  });
+
+  if (z2Revealed) {
+    const spFb = fb.filter(p => p.strongPartisan).length;
+    const spNoFb = noFb.filter(p => p.strongPartisan).length;
+    const pctSpFb = fb.length > 0 ? (spFb / fb.length * 100) : 0;
+    const pctSpNoFb = noFb.length > 0 ? (spNoFb / noFb.length * 100) : 0;
+    balRows.push({ label: 'Strong partisan', pctFb: pctSpFb, pctNoFb: pctSpNoFb, diff: pctSpFb - pctSpNoFb });
+  }
+
+  let html = `
+    <div class="explainer">
+      <strong>The hidden problem:</strong> Holding political interest constant works only if it is the <em>only</em> confounder. In the real world, there may be variables we didn't measure — or didn't think of.
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle-switch ${z2On ? 'on' : ''}" id="z2Toggle" onclick="toggleZ2()"></div>
+      <span class="toggle-label">Add an unmeasured variable: <strong>strength of partisanship</strong> (strong / weak — not measured in our survey)</span>
+    </div>
+
+    ${z2On ? `
+    <div class="within-row">
+      ${within.map(r => renderWithinCard(r)).join('')}
+    </div>
+
+    <div class="card">
+      <h3>Combined Estimate</h3>
+      <div class="summary-strip">
+        <div class="summary-item">
+          <div class="label">Raw Difference</div>
+          <div class="value mismatch">${fmtDiff(rawDiff)}</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">Within-Level Estimate</div>
+          <div class="value ${adjEst !== null && Math.abs(adjEst - trueEffect) < 5 ? 'match' : 'mismatch'}">${adjEst !== null ? fmtDiff(adjEst) : 'N/A'}</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">True Effect</div>
+          <div class="value">${fmtDiff(trueEffect)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Balance Table</h3>
+      <table class="balance-table">
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Facebook Group</th>
+            <th>Non-Facebook Group</th>
+            <th>Difference</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${balRows.map(r => `
+          <tr>
+            <td>${r.label}</td>
+            <td>${r.pctFb.toFixed(1)}%</td>
+            <td>${r.pctNoFb.toFixed(1)}%</td>
+            <td><span class="diff-badge ${Math.abs(r.diff) > 5 ? 'imbalanced' : 'balanced'}">${fmtDiff(r.diff)}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      ${!z2Revealed ? `<div style="text-align:center; margin-top:0.75rem;">
+        <button class="btn btn-outline" onclick="revealZ2()">Reveal the Missing Variable</button>
+      </div>` : `<div style="font-size:0.82rem; color:var(--text-light); margin-top:0.5rem;">
+        Strong partisanship is imbalanced between the groups — and it affects stress. Holding political interest constant didn't fix this.
+      </div>`}
+    </div>
+
+    <div class="card" style="text-align:center;">
+      <button class="btn btn-outline" onclick="runRepeat500(true)">Repeat 500 Times</button>
+      <div id="histArea"></div>
+    </div>
+
+    <p class="prompt">Can we ever be certain we've held everything constant?</p>
+    ` : `
+    <div style="text-align:center; padding:2rem; color:var(--text-light); font-style:italic;">
+      Turn on the toggle above to add an unmeasured confounding variable.
+    </div>
+    `}
+  `;
+  area.innerHTML = html;
+
+  if (z2On && simResults) renderHistogram(simResults, 'histArea');
+}
+
+// --- Shared rendering helpers ---
+function renderIconGrid(people) {
+  return `<div class="icon-grid">${people.map(p =>
+    `<div class="person-icon ${p.y === 1 ? 'stressed' : 'not-stressed'}"></div>`
+  ).join('')}</div>`;
+}
+
+function renderWithinCard(r) {
+  if (r.pFb === null || r.pNoFb === null) {
+    return `
+      <div class="within-card">
+        <h4>${r.z} Interest</h4>
+        <div class="too-few">Too few people to compare (n &lt; 10 in one group)</div>
+        <div class="within-n">FB: ${r.nFb} · Non-FB: ${r.nNoFb}</div>
+      </div>`;
+  }
+  const maxPct = Math.max(r.pFb, r.pNoFb, 1);
+  const barScale = 70 / maxPct;
+  return `
+    <div class="within-card">
+      <h4>${r.z} Interest</h4>
+      <div class="within-bar-row">
+        <div class="within-bar fb" style="height:${Math.max(2, r.pFb * barScale)}px;">${r.pFb.toFixed(0)}%</div>
+        <div class="within-bar nfb" style="height:${Math.max(2, r.pNoFb * barScale)}px;">${r.pNoFb.toFixed(0)}%</div>
+      </div>
+      <div class="within-labels"><span>FB</span><span>Non-FB</span></div>
+      <div class="within-diff" style="color:${Math.abs(r.diff) < 3 ? 'var(--green)' : 'var(--navy)'};">Diff: ${fmtDiff(r.diff)}</div>
+      <div class="within-n">FB: ${r.nFb} · Non-FB: ${r.nNoFb}</div>
+    </div>`;
+}
+
+function fmtDiff(d) {
+  if (d === null) return 'N/A';
+  const sign = d >= 0 ? '+' : '';
+  return sign + d.toFixed(1) + ' pp';
+}
+
+// --- Repeat 500 ---
+function runRepeat500(withZ2) {
+  const savedSeed = seed;
+  const savedZ2 = z2On;
+  z2On = withZ2;
+
+  const rawDiffs = [];
+  const adjDiffs = [];
+
+  for (let i = 0; i < 500; i++) {
+    seed = savedSeed + i + 1;
+    generatePopulation();
+
+    const fb = population.filter(p => p.x === 1);
+    const noFb = population.filter(p => p.x === 0);
+    const raw = pctStressed(fb) - pctStressed(noFb);
+    rawDiffs.push(raw);
+
+    const within = computeWithinLevel(population);
+    const adj = weightedEstimate(within);
+    if (adj !== null) adjDiffs.push(adj);
+  }
+
+  // Restore
+  seed = savedSeed;
+  z2On = savedZ2;
+  generatePopulation();
+
+  simResults = { rawDiffs, adjDiffs };
+
+  // Re-render to show histogram
+  if (currentStage === 2) renderStage2(document.getElementById('stageArea'));
+  else if (currentStage === 3) renderStage3(document.getElementById('stageArea'));
+}
+
+function renderHistogram(results, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="hist-canvas-wrap">
+      <canvas id="histCanvas"></canvas>
+      <div class="hist-legend">
+        <span class="raw">Raw difference (biased)</span>
+        <span class="adj">Within-level estimate</span>
+        <span class="truth">True effect</span>
+      </div>
+    </div>`;
+
+  const canvas = document.getElementById('histCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  const W = rect.width;
+  const H = rect.height;
+
+  const pad = { top: 20, right: 20, bottom: 35, left: 45 };
+  const plotW = W - pad.left - pad.right;
+  const plotH = H - pad.top - pad.bottom;
+
+  // Determine bin range
+  const all = [...results.rawDiffs, ...results.adjDiffs, trueEffect];
+  const lo = Math.floor(Math.min(...all) / 5) * 5 - 5;
+  const hi = Math.ceil(Math.max(...all) / 5) * 5 + 5;
+  const nBins = 25;
+  const binW = (hi - lo) / nBins;
+
+  function binData(vals) {
+    const bins = new Array(nBins).fill(0);
+    vals.forEach(v => {
+      const b = Math.min(nBins - 1, Math.max(0, Math.floor((v - lo) / binW)));
+      bins[b]++;
+    });
+    return bins;
+  }
+
+  const rawBins = binData(results.rawDiffs);
+  const adjBins = binData(results.adjDiffs);
+  const maxBin = Math.max(...rawBins, ...adjBins, 1);
+
+  const toX = v => pad.left + (v - lo) / (hi - lo) * plotW;
+  const barW = plotW / nBins;
+
+  // Grid
+  ctx.strokeStyle = '#e8ecf0';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (i / 4) * plotH;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+  }
+
+  // Raw bars
+  rawBins.forEach((c, i) => {
+    const h = (c / maxBin) * plotH;
+    const x = pad.left + i * barW;
+    ctx.fillStyle = 'rgba(192, 57, 43, 0.35)';
+    ctx.fillRect(x, pad.top + plotH - h, barW - 1, h);
+  });
+
+  // Adjusted bars
+  adjBins.forEach((c, i) => {
+    const h = (c / maxBin) * plotH;
+    const x = pad.left + i * barW;
+    ctx.fillStyle = 'rgba(42, 157, 143, 0.5)';
+    ctx.fillRect(x, pad.top + plotH - h, barW - 1, h);
+  });
+
+  // True effect line
+  const trueX = toX(trueEffect);
+  ctx.strokeStyle = '#1a2744';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath(); ctx.moveTo(trueX, pad.top); ctx.lineTo(trueX, pad.top + plotH); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#1a2744';
+  ctx.font = '600 11px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('True: ' + fmtDiff(trueEffect), trueX, pad.top - 5);
+
+  // Axes
+  ctx.strokeStyle = '#bcc5d0';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top + plotH); ctx.lineTo(W - pad.right, pad.top + plotH);
+  ctx.stroke();
+
+  // X labels
+  ctx.fillStyle = '#5a6c7d';
+  ctx.font = '10px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  const tickStep = Math.max(5, Math.round((hi - lo) / 8 / 5) * 5);
+  for (let v = Math.ceil(lo / tickStep) * tickStep; v <= hi; v += tickStep) {
+    ctx.fillText(v + ' pp', toX(v), pad.top + plotH + 16);
+  }
+
+  // Y label
+  ctx.save();
+  ctx.translate(14, pad.top + plotH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = '#5a6c7d';
+  ctx.font = '10px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Count', 0, 0);
+  ctx.restore();
+}
+
+// --- Toggle Z2 ---
+function toggleZ2() {
+  z2On = !z2On;
+  z2Revealed = false;
+  simResults = null;
+  renderStage();
+}
+
+function revealZ2() {
+  z2Revealed = true;
+  renderStage();
+}
+
+// --- Event handlers ---
+document.getElementById('nSelect').addEventListener('change', function() {
+  N = parseInt(this.value);
+  simResults = null;
+  renderStage();
+});
+
+document.getElementById('effectSlider').addEventListener('input', function() {
+  trueEffect = parseInt(this.value);
+  document.getElementById('effectDisplay').textContent = trueEffect + ' pp';
+});
+
+document.getElementById('effectSlider').addEventListener('change', function() {
+  trueEffect = parseInt(this.value);
+  simResults = null;
+  renderStage();
+});
+
+function newPopulation() {
+  seed = Math.floor(Math.random() * 100000);
+  simResults = null;
+  renderStage();
+}
+
+// Init
+generatePopulation();
+renderStage();
+</script>
+</body>
+</html>
