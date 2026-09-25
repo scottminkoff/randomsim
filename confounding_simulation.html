@@ -680,31 +680,31 @@ function buildInterpretation(rawDiff, adjEst, trueEff) {
     lines.push(`The raw comparison suggests that people who follow politics on Facebook have <strong>lower</strong> stress levels (${fmtDiff(rawDiff)}).`);
   }
 
-  // 2. What confounding is doing
+  // 2. What the confounding variable is doing
   if (trueEff === 0) {
     if (absBias > 5) {
-      lines.push(`But the true effect of Facebook is <strong>zero</strong>. The entire raw difference is driven by confounding — people with higher political interest are both more likely to follow politics on Facebook <em>and</em> more likely to be stressed.`);
+      lines.push(`But the true effect of Facebook is <strong>zero</strong>. The entire raw difference is driven by confounding variables: people with higher political interest are both more likely to follow politics on Facebook <em>and</em> more likely to be stressed.`);
     } else {
-      lines.push(`The true effect of Facebook is zero, and the raw difference happens to be small here. But notice the balance table still shows confounding — the groups differ on political interest.`);
+      lines.push(`The true effect of Facebook is zero, and the raw difference happens to be small here. But notice the balance table still shows confounding variables at work — the groups differ on political interest.`);
     }
   } else if (trueEff > 0) {
     if (absBias > 5) {
-      lines.push(`Facebook does increase stress (true effect: ${fmtDiff(trueEff)}), but confounding <strong>inflates</strong> the raw difference. The ${fmtDiff(rawDiff)} raw gap overstates the real ${fmtDiff(trueEff)} effect by ${fmtDiff(bias)}.`);
+      lines.push(`Facebook does increase stress (true effect: ${fmtDiff(trueEff)}), but the confounding variable <strong>inflates</strong> the raw difference. The ${fmtDiff(rawDiff)} raw gap overstates the real ${fmtDiff(trueEff)} effect by ${fmtDiff(bias)}.`);
     } else {
-      lines.push(`Facebook does increase stress (true effect: ${fmtDiff(trueEff)}). The raw difference happens to be close, but this is partly coincidental — confounding is still present in the balance table.`);
+      lines.push(`Facebook does increase stress (true effect: ${fmtDiff(trueEff)}). The raw difference happens to be close, but this is partly coincidental — the confounding variable is still present in the balance table.`);
     }
   } else {
     if (rawDiff > 0) {
-      lines.push(`Facebook actually <strong>reduces</strong> stress (true effect: ${fmtDiff(trueEff)}), but confounding <strong>reverses the sign</strong> — the raw comparison makes it look like Facebook increases stress. This is a classic case of confounding masking the true relationship.`);
+      lines.push(`Facebook actually <strong>reduces</strong> stress (true effect: ${fmtDiff(trueEff)}), but the confounding variable <strong>reverses the sign</strong> — the raw comparison makes it look like Facebook increases stress. This is a classic case of a confounding variable masking the true relationship.`);
     } else {
-      lines.push(`Facebook reduces stress (true effect: ${fmtDiff(trueEff)}). Confounding partially offsets this, making the raw difference smaller than the true effect.`);
+      lines.push(`Facebook reduces stress (true effect: ${fmtDiff(trueEff)}). The confounding variable partially offsets this, making the raw difference smaller than the true effect.`);
     }
   }
 
   // 3. What holding constant reveals
   if (adjEst !== null) {
     if (absAdj < 3) {
-      lines.push(`When we hold political interest constant, the within-level estimate (${fmtDiff(adjEst)}) is close to the true effect — the confounding is largely removed.`);
+      lines.push(`When we hold political interest constant, the within-level estimate (${fmtDiff(adjEst)}) is close to the true effect — the impact of the confounding variable is largely removed.`);
     } else {
       lines.push(`The within-level estimate (${fmtDiff(adjEst)}) moves closer to the true effect, though sampling variability means it won't match exactly in any single sample.`);
     }
